@@ -3,17 +3,22 @@
 
 int main() {
     std::cout << "Hello world!" << std::endl;
+    //Initialise an SFML render window
     sf::RenderWindow window(sf::VideoMode(1024,768), "HexGrid Demo Window");
-    sf::Texture tilemap;
-    if (!tilemap.loadFromFile("tileset.png")) {
+    //Load the tileset from locally saved file
+    sf::Texture tileset;
+    if (!tileset.loadFromFile("tileset.png")) {
         loadResourceException exc;
         throw exc;
     }
+    //Create a hexGrid of side length 20, textured with tileset.png with the mapping defined in "earth.dat"
     unsigned int sideLen = 20;
-    hexGrid draw(sideLen,320,&tilemap,"earth.dat");
+    hexGrid draw(sideLen,320,&tileset,"earth.dat");
+    //Shift the grid's scale and position on the screen to be fully visible
     double scale = 900.d / (2*sideLen+1);
     draw.setPosition(-5*scale,0.5*scale);
     draw.setScale(scale,scale);
+    //Keep the window open until closed
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -25,6 +30,7 @@ int main() {
         window.draw(draw);
         window.display();
     }
+    //Window closes
     std::cout << "Goodbye world!" << std::endl;
     return 0;
 }

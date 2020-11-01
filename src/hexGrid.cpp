@@ -15,6 +15,7 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * ti
     tileset(tileset),
     textureUnitWidth(textureUnitWidth)
 {
+    //Ensure that `textures` has the correct number of elements
     if (textures.size() != 3*(s*(s+1)) + 1) {
         initialiseGridTextureMapException exc;
         throw exc;
@@ -30,6 +31,7 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * ti
 {
     std::vector<unsigned char> fileData;
     std::ifstream infile(texturesFilename);
+    //Load data from specified file
     if (infile.is_open()) {
         infile.seekg(0, std::ios_base::end);
         auto fileSize = infile.tellg();
@@ -40,6 +42,7 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * ti
         loadResourceException exc;
         throw exc;
     }
+    //Ensure that loaded data has the correct number of elements
     if (fileData.size() != 3*(s*(s+1)) + 1) {
         initialiseGridTextureMapException exc;
         throw exc;
@@ -130,9 +133,11 @@ void hexGrid::setTexture(unsigned long pointIndex, unsigned char texChar) {
     unsigned int texModuland = tileset->getSize().x / textureUnitWidth;
     unsigned int xOffset = (texChar%texModuland);
     unsigned int yOffset = (texChar/texModuland);
+    //Centre of the hex
     for (unsigned char tri = 0; tri < 6; tri++) {
         triangles[3*(6*pointIndex + tri)].texCoords = sf::Vector2f((xOffset+0.5)*textureUnitWidth,(yOffset+0.5)*textureUnitWidth);
     }
+    //Vertices of the hex
     triangles[3*6*pointIndex + 1].texCoords = triangles[3*(6*pointIndex+5) + 2].texCoords = sf::Vector2f((xOffset + 0.5 - sqrt(3)/4)*textureUnitWidth, (yOffset + 0.75)*textureUnitWidth);
     triangles[3*(6*pointIndex+1) + 1].texCoords = triangles[3*6*pointIndex + 2].texCoords = sf::Vector2f((xOffset + 0.5)*textureUnitWidth, (yOffset+1)*textureUnitWidth);
     triangles[3*(6*pointIndex+2) + 1].texCoords = triangles[3*(6*pointIndex+1) + 2].texCoords = sf::Vector2f((xOffset + 0.5 + sqrt(3)/4)*textureUnitWidth, (yOffset + 0.75)*textureUnitWidth);
