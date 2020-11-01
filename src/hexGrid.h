@@ -45,6 +45,18 @@ public:
      * @param texChar: the index in the tileset of the texture to set for this hexagon
      */
     void setTexture(unsigned long pointIndex, unsigned char texChar);
+    /**
+     * Loads the textures map from a local data file
+     *
+     * @param texturesFilename: the name of the file to load from
+     */
+    void loadTexturesFromFile(std::string texturesFilename);
+    /**
+     * Saves the textures map from a local data file
+     *
+     * @param texturesFilename: the name of the file to save to
+     */
+    void saveTexturesToFile(std::string texturesFilename);
 };
 
 #endif // !HEXGRID_H

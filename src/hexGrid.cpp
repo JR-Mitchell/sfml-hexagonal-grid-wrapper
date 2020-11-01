@@ -145,3 +145,38 @@ void hexGrid::setTexture(unsigned long pointIndex, unsigned char texChar) {
     triangles[3*(6*pointIndex+4) + 1].texCoords = triangles[3*(6*pointIndex+3) + 2].texCoords = sf::Vector2f((xOffset + 0.5)*textureUnitWidth, yOffset*textureUnitWidth);
     triangles[3*(6*pointIndex+5) + 1].texCoords = triangles[3*(6*pointIndex+4) + 2].texCoords = sf::Vector2f((xOffset + 0.5 - sqrt(3)/4)*textureUnitWidth, (yOffset + 0.25)*textureUnitWidth);
 }
+
+void hexGrid::loadTexturesFromFile(std::string texturesFilename) {
+    std::vector<unsigned char> fileData;
+    std::ifstream infile(texturesFilename);
+    //Load data from specified file
+    if (infile.is_open()) {
+        infile.seekg(0, std::ios_base::end);
+        auto fileSize = infile.tellg();
+        fileData.resize(fileSize);
+        infile.seekg(0, std::ios_base::beg);
+        infile.read((char*)(&fileData[0]), fileSize);
+    } else {
+        loadResourceException exc;
+        throw exc;
+    }
+    //Ensure that loaded data has the correct number of elements
+    if (fileData.size() != textures.size()) {
+        initialiseGridTextureMapException exc;
+        throw exc;
+    }
+    textures = fileData;
+}
+
+void hexGrid::saveTexturesToFile(std::string texturesFilename) {
+    std::ofstream outfile(texturesFilename);
+    //Load data from specified file
+    if (outfile.is_open()) {
+        for (auto &i: textures) {
+            outfile << i;
+        }
+    } else {
+        loadResourceException exc;
+        throw exc;
+    }
+}
