@@ -16,10 +16,12 @@ private:
     /**
      * Generic method for initialising the underlying sf::VertexArray.
      * Called by all overloads of the constructor
-     *
-     * @param sidelength: the length of one of the sides of the hexagonal grid
      */
-    void init(unsigned int sidelength);
+    void init();
+    //The rotation of the grid in 30 degree intervals - either 0,1,2,3,4, or 5.
+    unsigned char gridRotation = 0;
+    //The length of one of the sides of the hexagonal grid
+    const unsigned int s;
     // Width of a single tile in the provided tileset, in pixels
     unsigned int textureUnitWidth;
     // Underlying std::vector storing the rows of the gird
@@ -30,6 +32,10 @@ private:
     std::vector<unsigned char> textures;
     // Overload of sf::Drawable's draw() method
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+    /**
+     * Updates the entire map with changes to textures - utilised in initialisation, rotation and loading
+     */
+    void updateTiles();
 public:
     // Constructor method with no provided texture mapping. Sets each hexagon to texture 0.
     hexGrid(unsigned int sidelength, unsigned int textureUnitWidth, sf::Texture * tileset);
@@ -57,6 +63,12 @@ public:
      * @param texturesFilename: the name of the file to save to
      */
     void saveTexturesToFile(std::string texturesFilename);
+    /**
+     * Sets the rotation of the grid to a particular value
+     *
+     * @param gridRotation: the value to set gridRotation to
+     */
+    void setGridRotation(unsigned char gridRotation);
 };
 
 #endif // !HEXGRID_H

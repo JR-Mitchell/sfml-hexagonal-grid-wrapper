@@ -16,17 +16,27 @@ int main() {
     hexGrid draw(sideLen,320,&tileset,"earth.dat");
     //Shift the grid's scale and position on the screen to be fully visible
     double scale = 700.d / (2*sideLen+1);
-    draw.setPosition(scale,0.5*scale);
+    draw.setPosition(152-scale,0.5*scale);
     draw.setScale(scale,scale);
+    unsigned char rot = 0;
     //Keep the window open until closed
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
                 window.close();
+            } else if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::E) {
+                    rot = (rot + 1) % 6;
+                } else if (event.key.code == sf::Keyboard::Q) {
+                    rot = (rot + 5) % 6;
+                } else if (event.key.code == sf::Keyboard::Escape) {
+                    window.close();
+                }
             }
         }
         window.clear(sf::Color::Black);
+        draw.setGridRotation(rot);
         window.draw(draw);
         window.display();
     }

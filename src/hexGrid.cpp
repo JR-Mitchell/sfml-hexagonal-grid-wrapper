@@ -3,28 +3,31 @@
 hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * tileset):
     textures(3*(s*(s+1))+1),
     tileset(tileset),
-    textureUnitWidth(textureUnitWidth)
+    textureUnitWidth(textureUnitWidth),
+    s(s)
 {
-    init(s);
+    init();
 }
 
 hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * tileset, std::vector<unsigned char> textures):
     textures(textures),
     tileset(tileset),
-    textureUnitWidth(textureUnitWidth)
+    textureUnitWidth(textureUnitWidth),
+    s(s)
 {
     //Ensure that `textures` has the correct number of elements
     if (textures.size() != 3*(s*(s+1)) + 1) {
         initialiseGridTextureMapException exc;
         throw exc;
     }
-    init(s);
+    init();
 }
 
 hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * tileset, std::string texturesFilename):
     textures(0),
     tileset(tileset),
-    textureUnitWidth(textureUnitWidth)
+    textureUnitWidth(textureUnitWidth),
+    s(s)
 {
     std::vector<unsigned char> fileData;
     std::ifstream infile(texturesFilename);
@@ -45,10 +48,10 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * ti
         throw exc;
     }
     textures = fileData;
-    init(s);
+    init();
 }
 
-void hexGrid::init(unsigned int s) {
+void hexGrid::init() {
     //Initialise rows
     for (unsigned int i = 0; i < s; i++) {
         rows.emplace_back(2*i + 1, textureUnitWidth, true);
@@ -64,6 +67,10 @@ void hexGrid::init(unsigned int s) {
         rows.emplace_back(2*(s-i) - 1, textureUnitWidth, false);
         rows.back().setPosition(i+1,1+1.5*s+0.5*i);
     }
+    updateTiles();
+}
+
+void hexGrid::updateTiles() {
     //Map textures to rows
     unsigned int texModuland = tileset->getSize().x / textureUnitWidth;
     for (unsigned int b = 0; b <= 2*s; b++) {
@@ -76,8 +83,34 @@ void hexGrid::init(unsigned int s) {
             unsigned int xOffset = (textures[pointIndex]%texModuland);
             unsigned int yOffset = (textures[pointIndex]/texModuland);
             //Work out position in render rows
-            rows[a+b].setTexture((rows[a+b].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
-            rows[a+b+1].setTexture((rows[a+b+1].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
+            unsigned int aPrime = a;
+            unsigned int bPrime = b;
+            switch(gridRotation) {
+                case 1:
+                    aPrime = s + a - b;
+                    bPrime = a;
+                    break;
+                case 2:
+                    aPrime = 2*s - b;
+                    bPrime = s + a - b;
+                    break;
+                case 3:
+                    aPrime = 2*s - a;
+                    bPrime = 2*s - b;
+                    break;
+                case 4:
+                    aPrime = s - a + b;
+                    bPrime = 2*s - a;
+                    break;
+                case 5:
+                    aPrime = b;
+                    bPrime = s + b - a;
+                    break;
+                default:
+                    break;
+            }
+            rows[aPrime+bPrime].setTexture((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
+            rows[aPrime+bPrime+1].setTexture((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
         }
     }
 }
@@ -100,8 +133,34 @@ void hexGrid::setTexture(unsigned int a, unsigned int b, unsigned char texChar) 
     //Set texture on the render row
     unsigned int xOffset = (texChar%texModuland);
     unsigned int yOffset = (texChar/texModuland);
-    rows[a+b].setTexture((rows[a+b].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
-    rows[a+b+1].setTexture((rows[a+b+1].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
+            unsigned int aPrime = a;
+            unsigned int bPrime = b;
+            switch(gridRotation) {
+                case 1:
+                    aPrime = s + a - b;
+                    bPrime = a;
+                    break;
+                case 2:
+                    aPrime = 2*s - b;
+                    bPrime = s + a - b;
+                    break;
+                case 3:
+                    aPrime = 2*s - a;
+                    bPrime = 2*s - b;
+                    break;
+                case 4:
+                    aPrime = s - a + b;
+                    bPrime = 2*s - a;
+                    break;
+                case 5:
+                    aPrime = b;
+                    bPrime = s + b - a;
+                    break;
+                default:
+                    break;
+            }
+    rows[aPrime+bPrime].setTexture((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
+    rows[aPrime+bPrime+1].setTexture((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
 }
 
 void hexGrid::loadTexturesFromFile(std::string texturesFilename) {
@@ -124,22 +183,7 @@ void hexGrid::loadTexturesFromFile(std::string texturesFilename) {
         throw exc;
     }
     textures = fileData;
-    //Map textures to rows
-    unsigned int texModuland = tileset->getSize().x / textureUnitWidth;
-    for (unsigned int b = 0; b <= 2*s; b++) {
-        const unsigned int bottom = b < s ? 0 : b - s;
-        const unsigned int top = b < s ? b + s : 2*s;
-        for (unsigned int a = bottom; a <= top; a++) {
-            unsigned long pointIndex = b > s
-                ? a + b*(6*s + 3 - b)/2 - s*(s+2)
-                : a + b*(2*s + 3 + b)/2;
-            unsigned int xOffset = (textures[pointIndex]%texModuland);
-            unsigned int yOffset = (textures[pointIndex]/texModuland);
-            //Work out position in render rows
-            rows[a+b].setTexture((rows[a+b].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
-            rows[a+b+1].setTexture((rows[a+b+1].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
-        }
-    }
+    updateTiles();
 }
 
 void hexGrid::saveTexturesToFile(std::string texturesFilename) {
@@ -153,4 +197,13 @@ void hexGrid::saveTexturesToFile(std::string texturesFilename) {
         loadResourceException exc;
         throw exc;
     }
+}
+
+void hexGrid::setGridRotation(unsigned char rotation) {
+    if (rotation > 5) {
+        //TODO: proper exception
+        throw 1;
+    }
+    gridRotation = rotation;
+    updateTiles();
 }
