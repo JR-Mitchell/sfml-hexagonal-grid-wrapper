@@ -1,7 +1,6 @@
 #include "hexGrid.h"
 
 hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * tileset):
-    triangles(sf::Triangles, 3*6*(3*(s*(s+1))+1)),
     textures(3*(s*(s+1))+1),
     tileset(tileset),
     textureUnitWidth(textureUnitWidth)
@@ -10,7 +9,6 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * ti
 }
 
 hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * tileset, std::vector<unsigned char> textures):
-    triangles(sf::Triangles, 3*6*(3*(s*(s+1))+1)),
     textures(textures),
     tileset(tileset),
     textureUnitWidth(textureUnitWidth)
@@ -24,7 +22,6 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * ti
 }
 
 hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * tileset, std::string texturesFilename):
-    triangles(sf::Triangles, 3*6*(3*(s*(s+1))+1)),
     textures(0),
     tileset(tileset),
     textureUnitWidth(textureUnitWidth)
@@ -52,71 +49,35 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, sf::Texture * ti
 }
 
 void hexGrid::init(unsigned int s) {
-    unsigned int texModuland = tileset->getSize().x / textureUnitWidth;
-    //Back from b=S-1 a=2S
-    for (unsigned int bp = s; bp > 0; bp--) {
-        for (unsigned int ap = 2*s + 1; ap > 0; ap--) {
-            unsigned int a = ap - 1;
-            unsigned int b = bp - 1;
-            //Check that it's a valid point
-            if (a+b >= s) {
-                unsigned long pointIndex = (b*(b + 2*s + 3) + 2*a - 2*s)/2;
-                unsigned int xOffset = (textures[pointIndex]%texModuland);
-                unsigned int yOffset = (textures[pointIndex]/texModuland);
-                //Centre of the hex
-                for (unsigned char tri = 0; tri < 6; tri++) {
-                    //Position
-                    triangles[3*(6*pointIndex + tri)].position = sf::Vector2f(a+0.5*b,0.5*sqrt(3)*b);
-                    //Texture coordinates
-                    triangles[3*(6*pointIndex + tri)].texCoords = sf::Vector2f((xOffset+0.5)*textureUnitWidth,(yOffset+0.5)*textureUnitWidth);
-                }
-                //Vertices of the hex
-                triangles[3*6*pointIndex + 1].position = triangles[3*(6*pointIndex+5) + 2].position = sf::Vector2f(a+0.5*(static_cast<double>(b)-1),0.5*sqrt(3)*b - 0.5/sqrt(3));
-                triangles[3*(6*pointIndex+1) + 1].position = triangles[3*6*pointIndex + 2].position = sf::Vector2f(a+0.5*b,0.5*sqrt(3)*b - 1.f/sqrt(3));
-                triangles[3*(6*pointIndex+2) + 1].position = triangles[3*(6*pointIndex+1) + 2].position = sf::Vector2f(a+0.5*(b+1),0.5*sqrt(3)*b - 0.5/sqrt(3));
-                triangles[3*(6*pointIndex+3) + 1].position = triangles[3*(6*pointIndex+2) + 2].position = sf::Vector2f(a+0.5*(b+1),0.5*sqrt(3)*b + 0.5/sqrt(3));
-                triangles[3*(6*pointIndex+4) + 1].position = triangles[3*(6*pointIndex+3) + 2].position = sf::Vector2f(a+0.5*b,0.5*sqrt(3)*b + 1.f/sqrt(3));
-                triangles[3*(6*pointIndex+5) + 1].position = triangles[3*(6*pointIndex+4) + 2].position = sf::Vector2f(a+0.5*(static_cast<double>(b)-1),0.5*sqrt(3)*b + 0.5/sqrt(3));
-                //Texture coordinates
-                triangles[3*6*pointIndex + 1].texCoords = triangles[3*(6*pointIndex+5) + 2].texCoords = sf::Vector2f((xOffset + 0.5 - sqrt(3)/4)*textureUnitWidth, (yOffset + 0.75)*textureUnitWidth);
-                triangles[3*(6*pointIndex+1) + 1].texCoords = triangles[3*6*pointIndex + 2].texCoords = sf::Vector2f((xOffset + 0.5)*textureUnitWidth, (yOffset+1)*textureUnitWidth);
-                triangles[3*(6*pointIndex+2) + 1].texCoords = triangles[3*(6*pointIndex+1) + 2].texCoords = sf::Vector2f((xOffset + 0.5 + sqrt(3)/4)*textureUnitWidth, (yOffset + 0.75)*textureUnitWidth);
-                triangles[3*(6*pointIndex+3) + 1].texCoords = triangles[3*(6*pointIndex+2) + 2].texCoords = sf::Vector2f((xOffset + 0.5 + sqrt(3)/4)*textureUnitWidth, (yOffset + 0.25)*textureUnitWidth);
-                triangles[3*(6*pointIndex+4) + 1].texCoords = triangles[3*(6*pointIndex+3) + 2].texCoords = sf::Vector2f((xOffset + 0.5)*textureUnitWidth, yOffset*textureUnitWidth);
-                triangles[3*(6*pointIndex+5) + 1].texCoords = triangles[3*(6*pointIndex+4) + 2].texCoords = sf::Vector2f((xOffset + 0.5 - sqrt(3)/4)*textureUnitWidth, (yOffset + 0.25)*textureUnitWidth);
-            }
-        }
+    //Initialise rows
+    for (unsigned int i = 0; i < s; i++) {
+        rows.emplace_back(2*i + 1, textureUnitWidth, true);
+        rows.back().setPosition(s-i,0.5*i);
     }
-    //Forward from b=S a=0
-    for (unsigned int b = s; b <= 2*s; b++) {
-        for (unsigned int a = 0; a <= 2*s; a++) {
-            //Check that it's a valid point
-            if (a+b <= 3*s) {
-                unsigned long pointIndex = (2*a + 2*s*(3*b - s - 1) + 3*b - b*b)/2;
-                unsigned int xOffset = (textures[pointIndex]%texModuland);
-                unsigned int yOffset = (textures[pointIndex]/texModuland);
-                //Centre of the hex
-                for (unsigned char tri = 0; tri < 6; tri++) {
-                    //Position
-                    triangles[3*(6*pointIndex + tri)].position = sf::Vector2f(a+0.5*b,0.5*sqrt(3)*b);
-                    //Texture coordinates
-                    triangles[3*(6*pointIndex + tri)].texCoords = sf::Vector2f((xOffset+0.5)*textureUnitWidth,(yOffset+0.5)*textureUnitWidth);
-                }
-                //Vertices of the hex
-                triangles[3*6*pointIndex + 1].position = triangles[3*(6*pointIndex+5) + 2].position = sf::Vector2f(a+0.5*(static_cast<double>(b)-1),0.5*sqrt(3)*b - 0.5/sqrt(3));
-                triangles[3*(6*pointIndex+1) + 1].position = triangles[3*6*pointIndex + 2].position = sf::Vector2f(a+0.5*b,0.5*sqrt(3)*b - 1.f/sqrt(3));
-                triangles[3*(6*pointIndex+2) + 1].position = triangles[3*(6*pointIndex+1) + 2].position = sf::Vector2f(a+0.5*(b+1),0.5*sqrt(3)*b - 0.5/sqrt(3));
-                triangles[3*(6*pointIndex+3) + 1].position = triangles[3*(6*pointIndex+2) + 2].position = sf::Vector2f(a+0.5*(b+1),0.5*sqrt(3)*b + 0.5/sqrt(3));
-                triangles[3*(6*pointIndex+4) + 1].position = triangles[3*(6*pointIndex+3) + 2].position = sf::Vector2f(a+0.5*b,0.5*sqrt(3)*b + 1.f/sqrt(3));
-                triangles[3*(6*pointIndex+5) + 1].position = triangles[3*(6*pointIndex+4) + 2].position = sf::Vector2f(a+0.5*(static_cast<double>(b)-1),0.5*sqrt(3)*b + 0.5/sqrt(3));
-                //Texture coordinates
-                triangles[3*6*pointIndex + 1].texCoords = triangles[3*(6*pointIndex+5) + 2].texCoords = sf::Vector2f((xOffset + 0.5 - sqrt(3)/4)*textureUnitWidth, (yOffset + 0.75)*textureUnitWidth);
-                triangles[3*(6*pointIndex+1) + 1].texCoords = triangles[3*6*pointIndex + 2].texCoords = sf::Vector2f((xOffset + 0.5)*textureUnitWidth, (yOffset+1)*textureUnitWidth);
-                triangles[3*(6*pointIndex+2) + 1].texCoords = triangles[3*(6*pointIndex+1) + 2].texCoords = sf::Vector2f((xOffset + 0.5 + sqrt(3)/4)*textureUnitWidth, (yOffset + 0.75)*textureUnitWidth);
-                triangles[3*(6*pointIndex+3) + 1].texCoords = triangles[3*(6*pointIndex+2) + 2].texCoords = sf::Vector2f((xOffset + 0.5 + sqrt(3)/4)*textureUnitWidth, (yOffset + 0.25)*textureUnitWidth);
-                triangles[3*(6*pointIndex+4) + 1].texCoords = triangles[3*(6*pointIndex+3) + 2].texCoords = sf::Vector2f((xOffset + 0.5)*textureUnitWidth, yOffset*textureUnitWidth);
-                triangles[3*(6*pointIndex+5) + 1].texCoords = triangles[3*(6*pointIndex+4) + 2].texCoords = sf::Vector2f((xOffset + 0.5 - sqrt(3)/4)*textureUnitWidth, (yOffset + 0.25)*textureUnitWidth);
-            }
+    for (unsigned int i = 0; i < s+1; i++) {
+        rows.emplace_back(2*s + 1, textureUnitWidth, true);
+        rows.back().setPosition(0,0.5*s + i);
+        rows.emplace_back(2*s + 1, textureUnitWidth, false);
+        rows.back().setPosition(0,0.5*s + i + 0.5);
+    }
+    for (unsigned int i = 0; i < s; i++) {
+        rows.emplace_back(2*(s-i) - 1, textureUnitWidth, false);
+        rows.back().setPosition(i+1,1+1.5*s+0.5*i);
+    }
+    //Map textures to rows
+    unsigned int texModuland = tileset->getSize().x / textureUnitWidth;
+    for (unsigned int b = 0; b <= 2*s; b++) {
+        const unsigned int bottom = b < s ? 0 : b - s;
+        const unsigned int top = b < s ? b + s : 2*s;
+        for (unsigned int a = bottom; a <= top; a++) {
+            unsigned long pointIndex = b > s
+                ? a + b*(6*s + 3 - b)/2 - s*(s+2)
+                : a + b*(2*s + 3 + b)/2;
+            unsigned int xOffset = (textures[pointIndex]%texModuland);
+            unsigned int yOffset = (textures[pointIndex]/texModuland);
+            //Work out position in render rows
+            rows[a+b].setTexture((rows[a+b].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
+            rows[a+b+1].setTexture((rows[a+b+1].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
         }
     }
 }
@@ -124,26 +85,23 @@ void hexGrid::init(unsigned int s) {
 void hexGrid::draw(sf::RenderTarget & target, sf::RenderStates states) const {
     states.transform *= getTransform();
     states.texture = tileset;
-    target.draw(triangles, states);
+    for (auto i: rows) {
+        target.draw(i, states);
+    }
 }
 
-void hexGrid::setTexture(unsigned long pointIndex, unsigned char texChar) {
-    textures[pointIndex] = texChar;
-    //Calculate position on tileset
+void hexGrid::setTexture(unsigned int a, unsigned int b, unsigned char texChar) {
+    //Set texChar in the textures vector
     unsigned int texModuland = tileset->getSize().x / textureUnitWidth;
+    unsigned long pointIndex = b > s
+        ? a + b*(6*s + 3 - b)/2 - s*(s+2)
+        : a + b*(2*s + 3 + b)/2;
+    textures[pointIndex] = texChar;
+    //Set texture on the render row
     unsigned int xOffset = (texChar%texModuland);
     unsigned int yOffset = (texChar/texModuland);
-    //Centre of the hex
-    for (unsigned char tri = 0; tri < 6; tri++) {
-        triangles[3*(6*pointIndex + tri)].texCoords = sf::Vector2f((xOffset+0.5)*textureUnitWidth,(yOffset+0.5)*textureUnitWidth);
-    }
-    //Vertices of the hex
-    triangles[3*6*pointIndex + 1].texCoords = triangles[3*(6*pointIndex+5) + 2].texCoords = sf::Vector2f((xOffset + 0.5 - sqrt(3)/4)*textureUnitWidth, (yOffset + 0.75)*textureUnitWidth);
-    triangles[3*(6*pointIndex+1) + 1].texCoords = triangles[3*6*pointIndex + 2].texCoords = sf::Vector2f((xOffset + 0.5)*textureUnitWidth, (yOffset+1)*textureUnitWidth);
-    triangles[3*(6*pointIndex+2) + 1].texCoords = triangles[3*(6*pointIndex+1) + 2].texCoords = sf::Vector2f((xOffset + 0.5 + sqrt(3)/4)*textureUnitWidth, (yOffset + 0.75)*textureUnitWidth);
-    triangles[3*(6*pointIndex+3) + 1].texCoords = triangles[3*(6*pointIndex+2) + 2].texCoords = sf::Vector2f((xOffset + 0.5 + sqrt(3)/4)*textureUnitWidth, (yOffset + 0.25)*textureUnitWidth);
-    triangles[3*(6*pointIndex+4) + 1].texCoords = triangles[3*(6*pointIndex+3) + 2].texCoords = sf::Vector2f((xOffset + 0.5)*textureUnitWidth, yOffset*textureUnitWidth);
-    triangles[3*(6*pointIndex+5) + 1].texCoords = triangles[3*(6*pointIndex+4) + 2].texCoords = sf::Vector2f((xOffset + 0.5 - sqrt(3)/4)*textureUnitWidth, (yOffset + 0.25)*textureUnitWidth);
+    rows[a+b].setTexture((rows[a+b].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
+    rows[a+b+1].setTexture((rows[a+b+1].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
 }
 
 void hexGrid::loadTexturesFromFile(std::string texturesFilename) {
@@ -166,6 +124,22 @@ void hexGrid::loadTexturesFromFile(std::string texturesFilename) {
         throw exc;
     }
     textures = fileData;
+    //Map textures to rows
+    unsigned int texModuland = tileset->getSize().x / textureUnitWidth;
+    for (unsigned int b = 0; b <= 2*s; b++) {
+        const unsigned int bottom = b < s ? 0 : b - s;
+        const unsigned int top = b < s ? b + s : 2*s;
+        for (unsigned int a = bottom; a <= top; a++) {
+            unsigned long pointIndex = b > s
+                ? a + b*(6*s + 3 - b)/2 - s*(s+2)
+                : a + b*(2*s + 3 + b)/2;
+            unsigned int xOffset = (textures[pointIndex]%texModuland);
+            unsigned int yOffset = (textures[pointIndex]/texModuland);
+            //Work out position in render rows
+            rows[a+b].setTexture((rows[a+b].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
+            rows[a+b+1].setTexture((rows[a+b+1].noHexes + 2*a - 2*b)/2,xOffset,yOffset,textureUnitWidth);
+        }
+    }
 }
 
 void hexGrid::saveTexturesToFile(std::string texturesFilename) {

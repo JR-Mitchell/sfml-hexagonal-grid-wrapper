@@ -15,8 +15,8 @@ int main() {
     unsigned int sideLen = 20;
     hexGrid draw(sideLen,320,&tileset,"earth.dat");
     //Shift the grid's scale and position on the screen to be fully visible
-    double scale = 900.d / (2*sideLen+1);
-    draw.setPosition(-5*scale,0.5*scale);
+    double scale = 700.d / (2*sideLen+1);
+    draw.setPosition(scale,0.5*scale);
     draw.setScale(scale,scale);
     //Keep the window open until closed
     while (window.isOpen()) {

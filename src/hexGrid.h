@@ -2,8 +2,7 @@
 #ifndef HEXGRID_H
 #define HEXGRID_H
 
-#include <SFML/Graphics.hpp>
-#include <math.h>
+#include "renderRow.h"
 #include <vector>
 #include <fstream>
 #include <string>
@@ -23,8 +22,8 @@ private:
     void init(unsigned int sidelength);
     // Width of a single tile in the provided tileset, in pixels
     unsigned int textureUnitWidth;
-    // Underlying sf::VertexArray storing the 6 equilateral triangles for each hexagon in the grid
-    sf::VertexArray triangles;
+    // Underlying std::vector storing the rows of the gird
+    std::vector<renderRow> rows;
     // Tileset to apply textures to the terrain with
     sf::Texture * tileset;
     // Vector mapping the index of a grid hexagon to the texture in the tileset that it should be textured with
@@ -42,9 +41,10 @@ public:
      * Sets the texture in the tileset of a particular hexagon
      *
      * @param pointIndex: the index of the hexagon whose texture is set
-     * @param texChar: the index in the tileset of the texture to set for this hexagon
+     * @param a: the 'a' coordinate of the hexagon to change; i.e the number of down-and-right moves from the top hexagon
+     * @param a: the 'b' coordinate of the hexagon to change; i.e the number of down-and-left moves from the top hexagon
      */
-    void setTexture(unsigned long pointIndex, unsigned char texChar);
+    void setTexture(unsigned int a, unsigned int b, unsigned char texChar);
     /**
      * Loads the textures map from a local data file
      *
