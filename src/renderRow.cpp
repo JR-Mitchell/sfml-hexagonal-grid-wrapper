@@ -54,16 +54,27 @@ void renderRow::setTexture(unsigned int hexIndex, unsigned int xOffset, unsigned
     edges[4*(3*hexIndex + 2) + 3].texCoords = sf::Vector2f((xOffset+1)*textureWidth,(yOffset+0.5)*textureWidth);
 }
 
-void renderRow::setHeights(unsigned int hexIndex, double centerHeight, double farLeftHeight, double leftHeight, double rightHeight, double farRightHeight) {
+void renderRow::setHeights(unsigned int hexIndex, double * heights) {
     const double sqrtTerm = sqrt(1.0/3.0);
     const bool isTop = (static_cast<unsigned int>(topFirst) + hexIndex)%2 == 1;
     const double bottom = static_cast<double>(isTop);
     const double top = static_cast<double>(!isTop);
     //Centre of the hex
-    triangles[9*hexIndex].position = triangles[3*(3*hexIndex + 1)].position = triangles[3*(3*hexIndex + 2)].position = sf::Vector2f(hexIndex,sqrtTerm*bottom - centerHeight);
-    //Vertices of the hex
-    triangles[9*hexIndex + 1].position = edges[12*hexIndex + 1].position = sf::Vector2f(hexIndex-2.0/3.0,sqrtTerm*bottom - farLeftHeight);
-    triangles[9*hexIndex + 2].position = triangles[3*(3*hexIndex + 1) + 1].position = edges[12*hexIndex + 2].position = edges[4*(3*hexIndex + 1) + 1].position = sf::Vector2f(hexIndex-1.0/3.0,sqrtTerm*top - leftHeight);
-    triangles[3*(3*hexIndex + 1) + 2].position = triangles[3*(3*hexIndex + 2) + 1].position = edges[4*(3*hexIndex + 1) + 2].position = edges[4*(3*hexIndex + 2) + 1].position = sf::Vector2f(hexIndex+1.0/3.0,sqrtTerm*top - rightHeight);
-    triangles[3*(3*hexIndex + 2) + 2].position = edges[4*(3*hexIndex + 2) + 2].position = sf::Vector2f(hexIndex+2.0/3.0,sqrtTerm*bottom - farRightHeight);
+    triangles[9*hexIndex].position = triangles[3*(3*hexIndex + 1)].position = triangles[3*(3*hexIndex + 2)].position = sf::Vector2f(hexIndex,sqrtTerm*bottom - heights[0]);
+    //Leftmost hex vertex
+    triangles[9*hexIndex + 1].position = edges[12*hexIndex + 1].position = sf::Vector2f(hexIndex-2.0/3.0,sqrtTerm*bottom - heights[1]);
+    //Leftmost edge bottom
+    edges[12*hexIndex].position = sf::Vector2f(hexIndex-2.0/3.0,sqrtTerm*bottom - heights[2]);
+    //Slightly left hex vertex
+    triangles[9*hexIndex + 2].position = triangles[3*(3*hexIndex + 1) + 1].position = edges[12*hexIndex + 2].position = edges[4*(3*hexIndex + 1) + 1].position = sf::Vector2f(hexIndex-1.0/3.0,sqrtTerm*top - heights[3]);
+    //Slightly left edge bottom
+    edges[12*hexIndex + 3].position = edges[4*(3*hexIndex + 1)].position = sf::Vector2f(hexIndex-1.0/3.0,sqrtTerm*top - heights[4]);
+    //Slightly right hex vertex
+    triangles[3*(3*hexIndex + 1) + 2].position = triangles[3*(3*hexIndex + 2) + 1].position = edges[4*(3*hexIndex + 1) + 2].position = edges[4*(3*hexIndex + 2) + 1].position = sf::Vector2f(hexIndex+1.0/3.0,sqrtTerm*top - heights[5]);
+    //Slightly right edge bottom
+    edges[4*(3*hexIndex + 1) + 3].position = edges[4*(3*hexIndex + 2)].position = sf::Vector2f(hexIndex+1.0/3.0,sqrtTerm*top - heights[6]);
+    //Rightmost hex vertex
+    triangles[3*(3*hexIndex + 2) + 2].position = edges[4*(3*hexIndex + 2) + 2].position = sf::Vector2f(hexIndex+2.0/3.0,sqrtTerm*bottom - heights[7]);
+    //Rightmost edge bottom
+    edges[4*(3*hexIndex + 2) + 3].position = sf::Vector2f(hexIndex+2.0/3.0,sqrtTerm*bottom - heights[8]);
 }

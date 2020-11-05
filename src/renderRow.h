@@ -45,13 +45,11 @@ public:
      * Sets the heights for a particular hexagon
      *
      * @param hexIndex: the index of the hexagon to set texture for
-     * @param centreHeight: the height of the hex center
-     * @param farLeftHeight: the height of the leftmost hex vertex
-     * @param leftHeight: the height of the slightly left hex vertex
-     * @param rightHeight: the height of the slightly right hex vertex
-     * @param farRightHeight: the height of the rightmost hex vertex
+     * @param heights: array of 9 heights: of the centre (0), leftmost hex vertex (1), leftmost edge bottom (2),
+     *      slightly left hex vertex (3), slightly left edge bottom (4), slightly right hex vertex (5), slightly
+     *      right edge bottom (6), rightmost hex vertex (7), rightmost edge bottom (8)
      */
-    void setHeights(unsigned int hexIndex, double centreHeight, double farLeftHeight, double leftHeight, double rightHeight, double farRightHeight);
+    void setHeights(unsigned int hexIndex, double * heights);
 };
 
 #endif // !RENDERROW_H

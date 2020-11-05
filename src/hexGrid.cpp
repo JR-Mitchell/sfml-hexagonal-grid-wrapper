@@ -83,10 +83,11 @@ void hexGrid::updateTiles() {
             unsigned int xOffset = (textures[pointIndex]%texModuland);
             unsigned int yOffset = (textures[pointIndex]/texModuland);
             //Work out position in render rows
+            double tileHeights [9] = { heights[pointIndex]*heightUnit,heights[pointIndex]*heightUnit,0,heights[pointIndex]*heightUnit,0,heights[pointIndex]*heightUnit,0,heights[pointIndex]*heightUnit,0 };
             rows[aPrime+bPrime].setTexture((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
             rows[aPrime+bPrime+1].setTexture((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
-            rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,heights[pointIndex]*heightUnit,heights[pointIndex]*heightUnit,heights[pointIndex]*heightUnit,heights[pointIndex]*heightUnit,heights[pointIndex]*heightUnit);
-            rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,heights[pointIndex]*heightUnit,heights[pointIndex]*heightUnit,heights[pointIndex]*heightUnit,heights[pointIndex]*heightUnit,heights[pointIndex]*heightUnit);
+            rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
+            rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
         }
     }
 }
@@ -148,8 +149,9 @@ void hexGrid::setTileHeight(unsigned int a, unsigned int b, char height) {
     getOtherCoordinates(a,b,pointIndex,aPrime,bPrime);
     heights[pointIndex] = height;
     //Set height on the render row
-    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit);
-    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit);
+    double tileHeights [9] = { height*heightUnit,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0 };
+    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
+    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
 }
 
 void hexGrid::setTileSharpness(unsigned int a, unsigned int b, unsigned char sharpness) {
@@ -160,8 +162,9 @@ void hexGrid::setTileSharpness(unsigned int a, unsigned int b, unsigned char sha
     sharpnesses[pointIndex] = sharpness;
     //Set height on the render row
     char height = heights[pointIndex];
-    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit);
-    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit);
+    double tileHeights [9] = { height*heightUnit,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0 };
+    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
+    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
 }
 
 void hexGrid::setTileInfo(unsigned int a, unsigned int b, unsigned char texChar, char height, unsigned char sharpness) {
@@ -176,10 +179,11 @@ void hexGrid::setTileInfo(unsigned int a, unsigned int b, unsigned char texChar,
     //Set height and texture on the render row
     unsigned int xOffset = (texChar%texModuland);
     unsigned int yOffset = (texChar/texModuland);
+    double tileHeights [9] = { height*heightUnit,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0 };
     rows[aPrime+bPrime].setTexture((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
     rows[aPrime+bPrime+1].setTexture((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
-    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit);
-    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit,height*heightUnit);
+    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
+    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
 }
 
 //Getters for individual hexagons
