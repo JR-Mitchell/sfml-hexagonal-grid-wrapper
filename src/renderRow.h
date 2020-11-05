@@ -16,8 +16,10 @@ class renderRow: public sf::Drawable, public sf::Transformable {
 private:
     // whether the first triangle is part of the top of a hexagon
     const bool topFirst;
-    // Underlying sf::VertexArray storing the 6 equilateral triangles for each hexagon in the grid
+    // Underlying sf::VertexArray storing the 3 equilateral triangles for each hexagon in the grid
     sf::VertexArray triangles;
+    // Underlying sf::VertexArray storing the 3 extrusion edges for each hexagon in the grid
+    sf::VertexArray edges;
     // Overload of sf::Drawable's draw() method
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 public:

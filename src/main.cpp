@@ -31,7 +31,7 @@ int main() {
     }
     //Create a hexGrid of side length 20, textured with tileset.png with the mapping defined in "earth.dat"
     unsigned int sideLen = 20;
-    hexGrid draw(sideLen,320,-0.5,&tileset,texMap,heightMap,sharpMap);
+    hexGrid draw(sideLen,320,0.5,&tileset,texMap,heightMap,sharpMap);
     //Shift the grid's scale and position on the screen to be fully visible
     double scale = 700.d / (2*sideLen+1);
     draw.setPosition(152-scale,0.5*scale);
