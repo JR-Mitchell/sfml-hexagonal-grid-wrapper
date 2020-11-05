@@ -39,6 +39,17 @@ public:
      * @param textureWidth: width of a single tile in the tileset
      */
     void setTexture(unsigned int hexIndex, unsigned int xOffset, unsigned int yOffset, unsigned int textureWidth);
+    /**
+     * Sets the heights for a particular hexagon
+     *
+     * @param hexIndex: the index of the hexagon to set texture for
+     * @param centreHeight: the height of the hex center
+     * @param farLeftHeight: the height of the leftmost hex vertex
+     * @param leftHeight: the height of the slightly left hex vertex
+     * @param rightHeight: the height of the slightly right hex vertex
+     * @param farRightHeight: the height of the rightmost hex vertex
+     */
+    void setHeights(unsigned int hexIndex, double centreHeight, double farLeftHeight, double leftHeight, double rightHeight, double farRightHeight);
 };
 
 #endif // !RENDERROW_H
