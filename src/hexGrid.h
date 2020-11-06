@@ -40,8 +40,11 @@ private:
     // Vector mapping the index of a grid hexagon to the height of that hexagon
     std::vector<char> heights;
 
-    // Vector mapping the index of a grid hexagon to the sharpness of that hexagon
-    std::vector<unsigned char> sharpnesses;
+    // Vector mapping the index of a grid hexagon to the flatness of that hexagon
+    std::vector<unsigned char> flatnesses;
+
+    // Vector mapping the index of a grid hexagon to the edge offset of that hexagon
+    std::vector<unsigned char> edgeOffsets;
 
     //Methods
 
@@ -60,15 +63,33 @@ private:
     void updateTiles();
 
     /**
+     * Updates the height of a specific tile, making necessary changes to neighbouring tiles as well
+     *
+     * @param a: the 'a' coordinate of the hexagon; i.e the number of down-and-right moves from the top hexagon
+     * @param b: the 'b' coordinate of the hexagon; i.e the number of down-and-left moves from the top hexagon
+     */
+    void updateTileHeight(unsigned int a, unsigned int b);
+
+    /**
      * Calculates the point index and rotated coordinates for given a and b
      *
      * @param a: the 'a' coordinate of the hexagon; i.e the number of down-and-right moves from the top hexagon
      * @param b: the 'b' coordinate of the hexagon; i.e the number of down-and-left moves from the top hexagon
-     * @param height: reference to a variable to set to the index of the hexagon
+     * @param pointIndex: reference to a variable to set to the index of the hexagon
      * @param aPrime: reference to a variable to set to the rotated a coordinate
      * @param bPrime: reference to a variable to set to the rotated b coordinate
      */
     void getOtherCoordinates(unsigned int a, unsigned int b, unsigned long & pointIndex, unsigned int & aPrime, unsigned int & bPrime);
+
+    /**
+     * Calculates the 9 height values based on neighbouring tile heights for a given tile
+     * @param a: the 'a' coordinate of the hexagon; i.e the number of down-and-right moves from the top hexagon
+     * @param b: the 'b' coordinate of the hexagon; i.e the number of down-and-left moves from the top hexagon
+     * @param pointIndex: the index of the hexagon
+     * @param topHeights: size-9 double array to update with the heights of the upper half
+     * @param bottomHeights: size-9 double array to update with the heights of the lower half
+     */
+    void getTileHeights(unsigned int a, unsigned int b, unsigned long pointIndex, double * topHeights, double * bottomHeights);
 
 public:
     //Constructors
@@ -92,9 +113,10 @@ public:
      * @param tileset: tileset to use for textures of the terrain
      * @param textures: vector mapping the index of a grid hexagon to the texture in the tileset that it should be textured with
      * @param heights: vector mapping the index of a grid hexagon to the height of that hexagon
-     * @param sharpnesses: vector mapping the index of a grid hexagon to the sharpness of that hexagon
+     * @param flatnesses: vector mapping the index of a grid hexagon to the flatness of that hexagon
+     * @param edgeOffsets: vector mapping the index of a grid hexagon to the edge offset of that hexagon
      */
-    hexGrid(unsigned int sidelength, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset, std::vector<unsigned char> & textures, std::vector<char> & heights, std::vector<unsigned char> & sharpnesses);
+    hexGrid(unsigned int sidelength, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset, std::vector<unsigned char> & textures, std::vector<char> & heights, std::vector<unsigned char> & flatnesses, std::vector<unsigned char> & edgeOffsets);
 
     //Setters for individual hexagons
 
@@ -117,24 +139,34 @@ public:
     void setTileHeight(unsigned int a, unsigned int b, char height);
 
     /**
-     * Sets the sharpness of a particular hexagon
+     * Sets the flatness of a particular hexagon
      *
      * @param a: the 'a' coordinate of the hexagon to change; i.e the number of down-and-right moves from the top hexagon
      * @param b: the 'b' coordinate of the hexagon to change; i.e the number of down-and-left moves from the top hexagon
-     * @param sharpness: the sharpness to set to
+     * @param flatness: the flatness to set to
      */
-    void setTileSharpness(unsigned int a, unsigned int b, unsigned char sharpness);
+    void setTileFlatness(unsigned int a, unsigned int b, unsigned char flatness);
 
     /**
-     * Sets the texture, height and sharpness of a particular hexagon
+     * Sets the edge offset of a particular hexagon
+     *
+     * @param a: the 'a' coordinate of the hexagon to change; i.e the number of down-and-right moves from the top hexagon
+     * @param b: the 'b' coordinate of the hexagon to change; i.e the number of down-and-left moves from the top hexagon
+     * @param edgeOffset: the edge offset to set to
+     */
+    void setTileOffset(unsigned int a, unsigned int b, unsigned char edgeOffset);
+
+    /**
+     * Sets the texture, height and flatness of a particular hexagon
      *
      * @param a: the 'a' coordinate of the hexagon to change; i.e the number of down-and-right moves from the top hexagon
      * @param b: the 'b' coordinate of the hexagon to change; i.e the number of down-and-left moves from the top hexagon
      * @param texChar: the index of the texture in the tileset
      * @param height: the height to set to
-     * @param sharpness: the sharpness to set to
+     * @param flatness: the flatness to set to
+     * @param edgeOffset: the edge offset to set to
      */
-    void setTileInfo(unsigned int a, unsigned int b, unsigned char texChar, char height, unsigned char sharpness);
+    void setTileInfo(unsigned int a, unsigned int b, unsigned char texChar, char height, unsigned char flatness, unsigned char edgeOffset);
 
     //Getters for individual hexagons
 
@@ -157,13 +189,22 @@ public:
     char getTileHeight(unsigned int a, unsigned int b);
 
     /**
-     * Gets the sharpness of a particular hexagon
+     * Gets the flatness of a particular hexagon
      *
      * @param a: the 'a' coordinate of the hexagon to get; i.e the number of down-and-right moves from the top hexagon
      * @param b: the 'b' coordinate of the hexagon to get; i.e the number of down-and-left moves from the top hexagon
-     * @returns: the sharpness of this tile
+     * @returns: the flatness of this tile
      */
-    unsigned char getTileSharpness(unsigned int a, unsigned int b);
+    unsigned char getTileFlatness(unsigned int a, unsigned int b);
+
+    /**
+     * Gets the edge offset of a particular hexagon
+     *
+     * @param a: the 'a' coordinate of the hexagon to get; i.e the number of down-and-right moves from the top hexagon
+     * @param b: the 'b' coordinate of the hexagon to get; i.e the number of down-and-left moves from the top hexagon
+     * @returns: the edge offset of this tile
+     */
+    unsigned char getTileOffset(unsigned int a, unsigned int b);
 
     /**
      * Gets the info for a particular hexagon by modifying the variables passed by reference
@@ -172,9 +213,10 @@ public:
      * @param b: the 'b' coordinate of the hexagon to get; i.e the number of down-and-left moves from the top hexagon
      * @param texChar: reference to a variable to set to the index of the texture in the tileset of the tile
      * @param height: reference to a variable to set to the height of the tile
-     * @param sharpness: reference to a variable to set to the sharpness of the tile
+     * @param flatness: reference to a variable to set to the flatness of the tile
+     * @param edgeOffset: reference to a variable to set to the edge offset of the tile
      */
-    void getTileInfo(unsigned int a, unsigned int b, unsigned char & texChar, char & height, unsigned char & sharpness);
+    void getTileInfo(unsigned int a, unsigned int b, unsigned char & texChar, char & height, unsigned char & flatness, unsigned char & edgeOffset);
 
     //Setters for the entire grid
 
@@ -200,21 +242,29 @@ public:
     void setGridHeights(std::vector<char> & heights);
 
     /**
-     * Sets the sharpness map for the entire grid
+     * Sets the flatness map for the entire grid
      *
-     * @param sharpnesses: vector mapping the index of a grid hexagon to the sharpness of that hexagon
+     * @param flatnesses: vector mapping the index of a grid hexagon to the flatness of that hexagon
      */
-    void setGridSharpnesses(std::vector<unsigned char> & sharpnesses);
+    void setGridFlatnesses(std::vector<unsigned char> & flatnesses);
 
     /**
-     * Sets the rotation, texture, height and sharpness maps for the entire grid
+     * Sets the edge offset map for the entire grid
+     *
+     * @param edgeOffsets: vector mapping the index of a grid hexagon to the edge offset of that hexagon
+     */
+    void setGridOffsets(std::vector<unsigned char> & edgeOffsets);
+
+    /**
+     * Sets the rotation, texture, height and flatness maps for the entire grid
      *
      * @param gridRotation: the value to set gridRotation to
      * @param textures: vector mapping the index of a grid hexagon to the texture in the tileset that it should be textured with
      * @param heights: vector mapping the index of a grid hexagon to the height of that hexagon
-     * @param sharpnesses: vector mapping the index of a grid hexagon to the sharpness of that hexagon
+     * @param flatnesses: vector mapping the index of a grid hexagon to the flatness of that hexagon
+     * @param edgeOffsets: vector mapping the index of a grid hexagon to the edge offset of that hexagon
      */
-    void setGridInfo(unsigned char gridRotation, std::vector<unsigned char> & textures, std::vector<char> & heights, std::vector<unsigned char> & sharpnesses);
+    void setGridInfo(unsigned char gridRotation, std::vector<unsigned char> & textures, std::vector<char> & heights, std::vector<unsigned char> & flatnesses, std::vector<unsigned char> & edgeOffsets);
 
     //Getters for the entire grid
 
@@ -240,11 +290,11 @@ public:
     void getGridHeights(std::vector<char> & heights);
 
     /**
-     * Gets the sharpness map for the entire grid by copying into a vector passed by reference
+     * Gets the flatness map for the entire grid by copying into a vector passed by reference
      *
-     * @param sharpnesses: reference to a vector to copy the sharpness map to
+     * @param flatnesses: reference to a vector to copy the flatness map to
      */
-    void getGridSharpnesses(std::vector<unsigned char> & sharpnesses);
+    void getGridFlatnesses(std::vector<unsigned char> & flatnesses);
 
 };
 

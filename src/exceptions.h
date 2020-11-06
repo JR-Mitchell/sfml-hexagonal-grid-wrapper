@@ -32,11 +32,20 @@ class initialiseGridHeightMapException: public std::exception {
 };
 
 /**
- * Exception for when a hexGrid is initialised with a `sharpnesses` param with the wrong number of elements
+ * Exception for when a hexGrid is initialised with a `flatnesses` param with the wrong number of elements
  */
-class initialiseGridSharpnessMapException: public std::exception {
+class initialiseGridFlatnessMapException: public std::exception {
     virtual const char* what() const throw() {
-        return "initialiseGridException: the sharpness mapping used to initialise the grid had the incorrect number of elements.";
+        return "initialiseGridException: the flatness mapping used to initialise the grid had the incorrect number of elements.";
+    }
+};
+
+/**
+ * Exception for when a hexGrid is initialised with an `edgeOffsets` param with the wrong number of elements
+ */
+class initialiseGridOffsetMapException: public std::exception {
+    virtual const char* what() const throw() {
+        return "initialiseGridException: the edge offset mapping used to initialise the grid had the incorrect number of elements.";
     }
 };
 
@@ -68,11 +77,20 @@ class setGridHeightMapException: public std::exception {
 };
 
 /**
- * Exception for when a hexGrid has sharpness set with a `sharpnesses` param with the wrong number of elements
+ * Exception for when a hexGrid has flatness set with a `flatnesses` param with the wrong number of elements
  */
-class setGridSharpnessMapException: public std::exception {
+class setGridFlatnessMapException: public std::exception {
     virtual const char* what() const throw() {
-        return "setGridException: the sharpness mapping applied to the grid had the incorrect number of elements.";
+        return "setGridException: the flatness mapping applied to the grid had the incorrect number of elements.";
+    }
+};
+
+/**
+ * Exception for when a hexGrid has edge offsets set with an 'edgeOffsets` param with the wrong number of elements
+ */
+class setGridOffsetMapException: public std::exception {
+    virtual const char* what() const throw() {
+        return "setGridException: the edge offset mapping applied to the grid had the incorrect number of elements.";
     }
 };
 

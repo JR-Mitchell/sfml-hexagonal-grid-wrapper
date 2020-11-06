@@ -14,14 +14,14 @@ int main() {
     //Load texture and height map
     std::vector<unsigned char> texMap;
     std::vector<char> heightMap;
-    std::vector<unsigned char> sharpMap;
+    std::vector<unsigned char> edgeMap;
     std::ifstream infile("earth.dat");
     if (infile.is_open()) {
         infile.seekg(0, std::ios_base::end);
         auto fileSize = infile.tellg();
         texMap.resize(fileSize);
         heightMap.resize(fileSize);
-        sharpMap.resize(fileSize);
+        edgeMap.resize(fileSize);
         infile.seekg(0, std::ios_base::beg);
         infile.read((char *)(&heightMap[0]), fileSize);
         infile.seekg(0, std::ios_base::beg);
@@ -29,9 +29,13 @@ int main() {
     } else {
         throw 1;
     }
+    for (unsigned long i=0; i < texMap.size(); i++) {
+        edgeMap[i] = texMap[i] > 1 ? texMap[i] - 1 : 0;
+    }
+    std::vector<unsigned char> flatnessMap(texMap.size(),1);
     //Create a hexGrid of side length 20, textured with tileset.png with the mapping defined in "earth.dat"
     unsigned int sideLen = 20;
-    hexGrid draw(sideLen,320,0.5,&tileset,texMap,heightMap,sharpMap);
+    hexGrid draw(sideLen,320,0.5,&tileset,texMap,heightMap,flatnessMap,edgeMap);
     //Shift the grid's scale and position on the screen to be fully visible
     double scale = 700.d / (2*sideLen+1);
     draw.setPosition(152-scale,0.5*scale);

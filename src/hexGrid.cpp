@@ -5,7 +5,8 @@
 hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset):
     textures(3*(s*(s+1))+1),
     heights(3*(s*(s+1))+1),
-    sharpnesses(3*(s*(s+1))+1),
+    flatnesses(3*(s*(s+1))+1),
+    edgeOffsets(3*(s*(s+1))+1),
     tileset(tileset),
     textureUnitWidth(textureUnitWidth),
     heightUnit(heightUnit),
@@ -14,10 +15,11 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUni
     init();
 }
 
-hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset, std::vector<unsigned char> & textures, std::vector<char> & heights, std::vector<unsigned char> & sharpnesses):
+hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset, std::vector<unsigned char> & textures, std::vector<char> & heights, std::vector<unsigned char> & flatnesses, std::vector<unsigned char> & edgeOffsets):
     textures(textures),
     heights(heights),
-    sharpnesses(sharpnesses),
+    flatnesses(flatnesses),
+    edgeOffsets(edgeOffsets),
     tileset(tileset),
     textureUnitWidth(textureUnitWidth),
     heightUnit(heightUnit),
@@ -33,9 +35,9 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUni
         initialiseGridHeightMapException exc;
         throw exc;
     }
-    //Ensure that `sharpnesses` has the correct number of elements
-    if (sharpnesses.size() != 3*(s*(s+1)) + 1) {
-        initialiseGridSharpnessMapException exc;
+    //Ensure that `flatnesses` has the correct number of elements
+    if (flatnesses.size() != 3*(s*(s+1)) + 1) {
+        initialiseGridFlatnessMapException exc;
         throw exc;
     }
     init();
@@ -83,19 +85,80 @@ void hexGrid::updateTiles() {
             unsigned int xOffset = (textures[pointIndex]%texModuland);
             unsigned int yOffset = (textures[pointIndex]/texModuland);
             //Work out position in render rows
-            double tileHeights [9] = { heights[pointIndex]*heightUnit,heights[pointIndex]*heightUnit,0,heights[pointIndex]*heightUnit,0,heights[pointIndex]*heightUnit,0,heights[pointIndex]*heightUnit,0 };
+            double topHeights [9];
+            double bottomHeights [9];
+            getTileHeights(a,b,pointIndex,topHeights,bottomHeights);
             rows[aPrime+bPrime].setTexture((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
             rows[aPrime+bPrime+1].setTexture((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
-            rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
-            rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
+            rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,topHeights);
+            rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,bottomHeights);
+        }
+    }
+}
+
+void hexGrid::updateTileHeight(unsigned int a, unsigned int b) {
+    unsigned long pointIndex;
+    unsigned int aPrime, bPrime;
+    getOtherCoordinates(a,b,pointIndex,aPrime,bPrime);
+    //Set height on the render row
+    double topHeights [9];
+    double bottomHeights [9];
+    getTileHeights(a,b,pointIndex,topHeights,bottomHeights);
+    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,topHeights);
+    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,bottomHeights);
+    //Cycle through surrounding hexagons
+    unsigned int rowWidth = b < s ? s + 1 + b : 3*s + 1 - b;
+    bool isValid [6] = {
+        a + s > b,
+        a > 0,
+        b > 0,
+        b + s > a,
+        a < 2*s,
+        b < 2*s
+    };
+    for (unsigned char i=0; i<6; i++) {
+        if (isValid[i] && isValid[(i+1)%6]) {
+            unsigned int newA = a;
+            unsigned int newB = b;
+            switch(i) {
+                case 0:
+                    newA -= 1;
+                    break;
+                case 1:
+                    newA -= 1;
+                    newB -= 1;
+                    break;
+                case 2:
+                    newB -= 1;
+                    break;
+                case 3:
+                    newA += 1;
+                    break;
+                case 4:
+                    newA += 1;
+                    newB += 1;
+                    break;
+                case 5:
+                    newB += 1;
+                    break;
+            }
+            unsigned long newPointIndex;
+            unsigned int newAPrime, newBPrime;
+            getOtherCoordinates(newA,newB,newPointIndex,newAPrime,newBPrime);
+            //Set height on the render row
+            double newTopHeights [9];
+            double newBottomHeights [9];
+            getTileHeights(newA,newB,newPointIndex,newTopHeights,newBottomHeights);
+            rows[newAPrime+newBPrime].setHeights((rows[newAPrime+newBPrime].noHexes + 2*newAPrime - 2*newBPrime)/2,newTopHeights);
+            rows[newAPrime+newBPrime+1].setHeights((rows[newAPrime+newBPrime+1].noHexes + 2*newAPrime - 2*newBPrime)/2,newBottomHeights);
         }
     }
 }
 
 void hexGrid::getOtherCoordinates(unsigned int a, unsigned int b, unsigned long & pointIndex, unsigned int & aPrime, unsigned int & bPrime) {
     pointIndex = b > s
-        ? a + b*(6*s + 3 - b)/2 - s*(s+2)
-        : a + b*(2*s + 3 + b)/2;
+        ? a + b*(6*s + 1 - b)/2 - s*s
+        : a + b*(2*s + 1 + b)/2;
     switch(gridRotation) {
         case 1:
             aPrime = s + a - b;
@@ -124,6 +187,77 @@ void hexGrid::getOtherCoordinates(unsigned int a, unsigned int b, unsigned long 
     }
 }
 
+void hexGrid::getTileHeights(unsigned int a, unsigned int b, unsigned long pointIndex, double * topHeights, double * bottomHeights) {
+    const char height = heights[pointIndex];
+    const unsigned int flatness = static_cast<unsigned int>(flatnesses[pointIndex]) + 1;
+    const char edgeOffset = edgeOffsets[pointIndex] < height ? height - edgeOffsets[pointIndex] : 0;
+    topHeights[0] = bottomHeights[0] = height*heightUnit;
+    unsigned int flatnessCumulative [6] = {flatness,flatness,flatness,flatness,flatness,flatness};
+    long flatnessHeightCumulative [6] = {flatness*static_cast<long>(height),flatness*static_cast<long>(height),flatness*static_cast<long>(height),flatness*static_cast<long>(height),flatness*static_cast<long>(height),flatness*static_cast<long>(height)};
+    //Cycle through surrounding hexagons
+    unsigned int rowWidth = b < s ? s + 1 + b : 3*s + 1 - b;
+    unsigned long neighbourIndices [6] = {
+        pointIndex - 1,
+        pointIndex - rowWidth + (b <= s) - 1,
+        pointIndex - rowWidth + (b <= s),
+        pointIndex + 1,
+        pointIndex + rowWidth - (b >= s) + 1,
+        pointIndex + rowWidth - (b >= s)
+    };
+    bool isValid [6] = {
+        a + s > b,
+        a > 0,
+        b > 0,
+        b + s > a,
+        a < 2*s,
+        b < 2*s
+    };
+    for (unsigned char i=0; i<6; i++) {
+        if (isValid[i] && isValid[(i+1)%6]) {
+            unsigned int flatnessAt = static_cast<unsigned int>(flatnesses[neighbourIndices[i]]) + 1;
+            long flatnessHeightAt = flatnessAt * static_cast<long>(heights[neighbourIndices[i]]);
+            flatnessCumulative[i] += flatnessAt;
+            flatnessCumulative[(i+1)%6] += flatnessAt;
+            flatnessHeightCumulative[i] += flatnessHeightAt;
+            flatnessHeightCumulative[(i+1)%6] += flatnessHeightAt;
+        }
+    }
+    double vertexHeights [6] = {0,0,0,0,0,0};
+    for (unsigned char i=0; i<6; i++) {
+        vertexHeights[i] = static_cast<double>(flatnessHeightCumulative[i])/static_cast<double>(flatnessCumulative[i]);
+    }
+    //Left vertex
+    topHeights[1] = bottomHeights[1] = height - edgeOffset > vertexHeights[(6-gridRotation)%6]
+        ? (height - edgeOffset)*heightUnit
+        : vertexHeights[(6-gridRotation)%6]*heightUnit;
+    topHeights[2] = bottomHeights[2] = vertexHeights[(6-gridRotation)%6]*heightUnit;
+    //Up-left vertex
+    topHeights[3] = height - edgeOffset > vertexHeights[((6-gridRotation)%6+1)%6]
+        ? (height - edgeOffset)*heightUnit
+        : vertexHeights[((6-gridRotation)%6+1)%6]*heightUnit;
+    topHeights[4] = vertexHeights[((6-gridRotation)%6+1)%6]*heightUnit;
+    //Up-right vertex
+    topHeights[5] = height - edgeOffset > vertexHeights[((6-gridRotation)%6+2)%6]
+        ? (height - edgeOffset)*heightUnit
+        : vertexHeights[((6-gridRotation)%6+2)%6]*heightUnit;
+    topHeights[6] = vertexHeights[((6-gridRotation)%6+2)%6]*heightUnit;
+    //Right vertex
+    topHeights[7] = bottomHeights[7] = height - edgeOffset > vertexHeights[((6-gridRotation)%6+3)%6]
+        ? (height - edgeOffset)*heightUnit
+        : vertexHeights[((6-gridRotation)%6+3)%6]*heightUnit;
+    topHeights[8] = bottomHeights[8] = vertexHeights[((6-gridRotation)%6+3)%6]*heightUnit;
+    //Down-left vertex
+    bottomHeights[3] = height - edgeOffset > vertexHeights[((6-gridRotation)%6+5)%6]
+        ? (height - edgeOffset)*heightUnit
+        : vertexHeights[((6-gridRotation)%6+5)%6]*heightUnit;
+    bottomHeights[4] = vertexHeights[((6-gridRotation)%6+5)%6]*heightUnit;
+    //Down-right vertex
+    bottomHeights[5] = height - edgeOffset > vertexHeights[((6-gridRotation)%6+4)%6]
+        ? (height - edgeOffset)*heightUnit
+        : vertexHeights[((6-gridRotation)%6+4)%6]*heightUnit;
+    bottomHeights[6] = vertexHeights[((6-gridRotation)%6+4)%6]*heightUnit;
+}
+
 //Public methods
 
 //Setters for individual hexagons
@@ -148,26 +282,19 @@ void hexGrid::setTileHeight(unsigned int a, unsigned int b, char height) {
     unsigned int aPrime, bPrime;
     getOtherCoordinates(a,b,pointIndex,aPrime,bPrime);
     heights[pointIndex] = height;
-    //Set height on the render row
-    double tileHeights [9] = { height*heightUnit,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0 };
-    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
-    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
+    updateTileHeight(a,b);
 }
 
-void hexGrid::setTileSharpness(unsigned int a, unsigned int b, unsigned char sharpness) {
-    //Set sharpness in the sharpnesses vector
+void hexGrid::setTileFlatness(unsigned int a, unsigned int b, unsigned char flatness) {
+    //Set flatness in the flatnesses vector
     unsigned long pointIndex;
     unsigned int aPrime, bPrime;
     getOtherCoordinates(a,b,pointIndex,aPrime,bPrime);
-    sharpnesses[pointIndex] = sharpness;
-    //Set height on the render row
-    char height = heights[pointIndex];
-    double tileHeights [9] = { height*heightUnit,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0 };
-    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
-    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
+    flatnesses[pointIndex] = flatness;
+    updateTileHeight(a,b);
 }
 
-void hexGrid::setTileInfo(unsigned int a, unsigned int b, unsigned char texChar, char height, unsigned char sharpness) {
+void hexGrid::setTileInfo(unsigned int a, unsigned int b, unsigned char texChar, char height, unsigned char flatness, unsigned char edgeOffset) {
     //Set info in vectors
     unsigned int texModuland = tileset->getSize().x / textureUnitWidth;
     unsigned long pointIndex;
@@ -175,15 +302,14 @@ void hexGrid::setTileInfo(unsigned int a, unsigned int b, unsigned char texChar,
     getOtherCoordinates(a,b,pointIndex,aPrime,bPrime);
     textures[pointIndex] = texChar;
     heights[pointIndex] = height;
-    sharpnesses[pointIndex] = sharpness;
+    flatnesses[pointIndex] = flatness;
+    edgeOffsets[pointIndex] = edgeOffset;
     //Set height and texture on the render row
     unsigned int xOffset = (texChar%texModuland);
     unsigned int yOffset = (texChar/texModuland);
-    double tileHeights [9] = { height*heightUnit,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0,height*heightUnit,0 };
     rows[aPrime+bPrime].setTexture((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
     rows[aPrime+bPrime+1].setTexture((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
-    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
-    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,tileHeights);
+    updateTileHeight(a,b);
 }
 
 //Getters for individual hexagons
@@ -202,20 +328,28 @@ char hexGrid::getTileHeight(unsigned int a, unsigned int b) {
     return heights[pointIndex];
 }
 
-unsigned char hexGrid::getTileSharpness(unsigned int a, unsigned int b) {
+unsigned char hexGrid::getTileFlatness(unsigned int a, unsigned int b) {
     unsigned long pointIndex;
     unsigned int aPrime, bPrime;
     getOtherCoordinates(a,b,pointIndex,aPrime,bPrime);
-    return sharpnesses[pointIndex];
+    return flatnesses[pointIndex];
 }
 
-void hexGrid::getTileInfo(unsigned int a, unsigned int b, unsigned char & texChar, char & height, unsigned char & sharpness) {
+unsigned char hexGrid::getTileOffset(unsigned int a, unsigned int b) {
+    unsigned long pointIndex;
+    unsigned int aPrime, bPrime;
+    getOtherCoordinates(a,b,pointIndex,aPrime,bPrime);
+    return edgeOffsets[pointIndex];
+}
+
+void hexGrid::getTileInfo(unsigned int a, unsigned int b, unsigned char & texChar, char & height, unsigned char & flatness, unsigned char & edgeOffset) {
     unsigned long pointIndex;
     unsigned int aPrime, bPrime;
     getOtherCoordinates(a,b,pointIndex,aPrime,bPrime);
     texChar = textures[pointIndex];
     height = heights[pointIndex];
-    sharpness = sharpnesses[pointIndex];
+    flatness = flatnesses[pointIndex];
+    edgeOffset = edgeOffsets[pointIndex];
 }
 
 
@@ -248,16 +382,25 @@ void hexGrid::setGridHeights(std::vector<char> & newHeights) {
     updateTiles();
 }
 
-void hexGrid::setGridSharpnesses(std::vector<unsigned char> & newSharpnesses) {
-    if (newSharpnesses.size() != 3*(s*(s+1)) + 1) {
-        setGridSharpnessMapException exc;
+void hexGrid::setGridFlatnesses(std::vector<unsigned char> & newFlatnesses) {
+    if (newFlatnesses.size() != 3*(s*(s+1)) + 1) {
+        setGridFlatnessMapException exc;
         throw exc;
     }
-    sharpnesses = newSharpnesses;
+    flatnesses = newFlatnesses;
     updateTiles();
 }
 
-void hexGrid::setGridInfo(unsigned char rotation, std::vector<unsigned char> & newTextures, std::vector<char> & newHeights, std::vector<unsigned char> & newSharpnesses) {
+void hexGrid::setGridOffsets(std::vector<unsigned char> & newEdgeOffsets) {
+    if (newEdgeOffsets.size() != 3*(s*(s+1)) + 1) {
+        setGridOffsetMapException exc;
+        throw exc;
+    }
+    edgeOffsets = newEdgeOffsets;
+    updateTiles();
+}
+
+void hexGrid::setGridInfo(unsigned char rotation, std::vector<unsigned char> & newTextures, std::vector<char> & newHeights, std::vector<unsigned char> & newFlatnesses, std::vector<unsigned char> & newEdgeOffsets) {
     if (rotation > 5) {
         setGridRotationException exc;
         throw exc;
@@ -270,14 +413,19 @@ void hexGrid::setGridInfo(unsigned char rotation, std::vector<unsigned char> & n
         setGridHeightMapException exc;
         throw exc;
     }
-    if (newSharpnesses.size() != 3*(s*(s+1)) + 1) {
-        setGridSharpnessMapException exc;
+    if (newFlatnesses.size() != 3*(s*(s+1)) + 1) {
+        setGridFlatnessMapException exc;
+        throw exc;
+    }
+    if (newEdgeOffsets.size() != 3*(s*(s+1)) + 1) {
+        setGridOffsetMapException exc;
         throw exc;
     }
     gridRotation = rotation;
     textures = newTextures;
     heights = newHeights;
-    sharpnesses = newSharpnesses;
+    flatnesses = newFlatnesses;
+    edgeOffsets = newEdgeOffsets;
     updateTiles();
 }
 
@@ -295,6 +443,6 @@ void hexGrid::getGridHeights(std::vector<char> & newHeights) {
     newHeights = heights;
 }
 
-void hexGrid::getGridSharpnesses(std::vector<unsigned char> & newSharpnesses) {
-    newSharpnesses = sharpnesses;
+void hexGrid::getGridFlatnesses(std::vector<unsigned char> & newFlatnesses) {
+    newFlatnesses = flatnesses;
 }
