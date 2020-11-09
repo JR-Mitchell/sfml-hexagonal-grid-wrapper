@@ -1,6 +1,21 @@
 #include "main.h"
 #include "fstream"
 
+sf::Color shader(unsigned int a, unsigned int b, unsigned char texChar, char height, sf::Vector3f normal) {
+    unsigned char baseBrightness = 105;
+    double heightBrightness = 1;
+    sf::Vector3f sunDirection (0.1,0.1,0.98994949366);
+    double normalMagnitude = sqrt(normal.x*normal.x + normal.y*normal.y + normal.z*normal.z);
+    double dotProduct = (sunDirection.x*normal.x + sunDirection.y*normal.y + sunDirection.z*normal.z)/normalMagnitude;
+    double totalBrightness = heightBrightness*height + baseBrightness + (255-baseBrightness)*dotProduct;
+    if (totalBrightness < 0) {
+        totalBrightness = 0;
+    } else if (totalBrightness > 255) {
+        totalBrightness = 255;
+    }
+    return sf::Color(totalBrightness,totalBrightness,totalBrightness,255);
+}
+
 int main() {
     std::cout << "Hello world!" << std::endl;
     //Initialise an SFML render window
@@ -35,7 +50,7 @@ int main() {
     std::vector<unsigned char> flatnessMap(texMap.size(),1);
     //Create a hexGrid of side length 20, textured with tileset.png with the mapping defined in "earth.dat"
     unsigned int sideLen = 20;
-    hexGrid draw(sideLen,320,0.5,&tileset,texMap,heightMap,flatnessMap,edgeMap);
+    hexGrid draw(sideLen,320,0.5,&tileset,texMap,heightMap,flatnessMap,edgeMap,shader);
     //Shift the grid's scale and position on the screen to be fully visible
     double scale = 700.d / (2*sideLen+1);
     draw.setPosition(152-scale,0.5*scale);

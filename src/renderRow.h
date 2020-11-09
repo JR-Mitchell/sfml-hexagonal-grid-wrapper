@@ -5,6 +5,7 @@
 #include <SFML/Graphics.hpp>
 #include <math.h>
 #include <vector>
+#include <functional>
 
 /**
  * renderRow class encapsulates sf::VertexArray (and later, sprites) to
@@ -48,8 +49,9 @@ public:
      * @param heights: array of 9 heights: of the centre (0), leftmost hex vertex (1), leftmost edge bottom (2),
      *      slightly left hex vertex (3), slightly left edge bottom (4), slightly right hex vertex (5), slightly
      *      right edge bottom (6), rightmost hex vertex (7), rightmost edge bottom (8)
+     * @param colourer: method that takes the vector normal to a surface and returns the colour to shade that surface
      */
-    void setHeights(unsigned int hexIndex, double * heights);
+    void setHeights(unsigned int hexIndex, double * heights, std::function<sf::Color(sf::Vector3f)> colourer);
 };
 
 #endif // !RENDERROW_H

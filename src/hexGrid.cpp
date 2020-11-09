@@ -2,7 +2,7 @@
 
 //Constructors
 
-hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset):
+hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset, std::function<sf::Color(unsigned int, unsigned int, unsigned char, char, sf::Vector3f)> colourer):
     textures(3*(s*(s+1))+1),
     heights(3*(s*(s+1))+1),
     flatnesses(3*(s*(s+1))+1),
@@ -10,12 +10,13 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUni
     tileset(tileset),
     textureUnitWidth(textureUnitWidth),
     heightUnit(heightUnit),
-    s(s)
+    s(s),
+    colourer(colourer)
 {
     init();
 }
 
-hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset, std::vector<unsigned char> & textures, std::vector<char> & heights, std::vector<unsigned char> & flatnesses, std::vector<unsigned char> & edgeOffsets):
+hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset, std::vector<unsigned char> & textures, std::vector<char> & heights, std::vector<unsigned char> & flatnesses, std::vector<unsigned char> & edgeOffsets, std::function<sf::Color(unsigned int, unsigned int, unsigned char, char, sf::Vector3f)> colourer):
     textures(textures),
     heights(heights),
     flatnesses(flatnesses),
@@ -23,7 +24,8 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUni
     tileset(tileset),
     textureUnitWidth(textureUnitWidth),
     heightUnit(heightUnit),
-    s(s)
+    s(s),
+    colourer(colourer)
 {
     //Ensure that `textures` has the correct number of elements
     if (textures.size() != 3*(s*(s+1)) + 1) {
@@ -82,16 +84,18 @@ void hexGrid::updateTiles() {
             unsigned long pointIndex;
             unsigned int aPrime, bPrime;
             getOtherCoordinates(a,b,pointIndex,aPrime,bPrime);
-            unsigned int xOffset = (textures[pointIndex]%texModuland);
-            unsigned int yOffset = (textures[pointIndex]/texModuland);
+            unsigned char texChar = textures[pointIndex];
+            char height = heights[pointIndex];
+            unsigned int xOffset = (texChar%texModuland);
+            unsigned int yOffset = (texChar/texModuland);
             //Work out position in render rows
             double topHeights [9];
             double bottomHeights [9];
             getTileHeights(a,b,pointIndex,topHeights,bottomHeights);
             rows[aPrime+bPrime].setTexture((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
             rows[aPrime+bPrime+1].setTexture((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,xOffset,yOffset,textureUnitWidth);
-            rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,topHeights);
-            rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,bottomHeights);
+            rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,topHeights,[a,b,texChar,height,this](sf::Vector3f normal){return colourer(a,b,texChar,height,normal);});
+            rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,bottomHeights,[a,b,texChar,height,this](sf::Vector3f normal){return colourer(a,b,texChar,height,normal);});
         }
     }
 }
@@ -104,8 +108,10 @@ void hexGrid::updateTileHeight(unsigned int a, unsigned int b) {
     double topHeights [9];
     double bottomHeights [9];
     getTileHeights(a,b,pointIndex,topHeights,bottomHeights);
-    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,topHeights);
-    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,bottomHeights);
+    unsigned char texChar = textures[pointIndex];
+    char height = heights[pointIndex];
+    rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,topHeights,[a,b,texChar,height,this](sf::Vector3f normal){return colourer(a,b,texChar,height,normal);});
+    rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,bottomHeights,[a,b,texChar,height,this](sf::Vector3f normal){return colourer(a,b,texChar,height,normal);});
     //Cycle through surrounding hexagons
     unsigned int rowWidth = b < s ? s + 1 + b : 3*s + 1 - b;
     bool isValid [6] = {
@@ -145,12 +151,14 @@ void hexGrid::updateTileHeight(unsigned int a, unsigned int b) {
             unsigned long newPointIndex;
             unsigned int newAPrime, newBPrime;
             getOtherCoordinates(newA,newB,newPointIndex,newAPrime,newBPrime);
+            texChar = textures[newPointIndex];
+            height = heights[newPointIndex];
             //Set height on the render row
             double newTopHeights [9];
             double newBottomHeights [9];
             getTileHeights(newA,newB,newPointIndex,newTopHeights,newBottomHeights);
-            rows[newAPrime+newBPrime].setHeights((rows[newAPrime+newBPrime].noHexes + 2*newAPrime - 2*newBPrime)/2,newTopHeights);
-            rows[newAPrime+newBPrime+1].setHeights((rows[newAPrime+newBPrime+1].noHexes + 2*newAPrime - 2*newBPrime)/2,newBottomHeights);
+            rows[newAPrime+newBPrime].setHeights((rows[newAPrime+newBPrime].noHexes + 2*newAPrime - 2*newBPrime)/2,newTopHeights,[a,b,texChar,height,this](sf::Vector3f normal){return colourer(a,b,texChar,height,normal);});
+            rows[newAPrime+newBPrime+1].setHeights((rows[newAPrime+newBPrime+1].noHexes + 2*newAPrime - 2*newBPrime)/2,newBottomHeights,[a,b,texChar,height,this](sf::Vector3f normal){return colourer(a,b,texChar,height,normal);});
         }
     }
 }

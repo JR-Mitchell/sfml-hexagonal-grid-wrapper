@@ -46,6 +46,9 @@ private:
     // Vector mapping the index of a grid hexagon to the edge offset of that hexagon
     std::vector<unsigned char> edgeOffsets;
 
+    // Method used for shading / colouring a tile from its characteristics
+    std::function<sf::Color(unsigned int a, unsigned int b, unsigned char texChar, char height, sf::Vector3f normal)> colourer;
+
     //Methods
 
     // Overload of sf::Drawable's draw() method
@@ -101,8 +104,9 @@ public:
      * @param textureUnitWidth: width in pixels of a single tile in the provided tileset
      * @param heightUnit: the scale factor for heights
      * @param tileset: tileset to use for textures of the terrain
+     * @param colourer: method used to colour/shade tiles depending on their height, position, texture and surface vector normals
      */
-    hexGrid(unsigned int sidelength, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset);
+    hexGrid(unsigned int sidelength, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset, std::function<sf::Color(unsigned int a, unsigned int b, unsigned char texChar, char height, sf::Vector3f normal)> colourer);
 
     /**
      * Constructor method for a grid with values copied from provided std::vectors
@@ -115,8 +119,9 @@ public:
      * @param heights: vector mapping the index of a grid hexagon to the height of that hexagon
      * @param flatnesses: vector mapping the index of a grid hexagon to the flatness of that hexagon
      * @param edgeOffsets: vector mapping the index of a grid hexagon to the edge offset of that hexagon
+     * @param colourer: method used to colour/shade tiles depending on their height, position, texture and surface vector normals
      */
-    hexGrid(unsigned int sidelength, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset, std::vector<unsigned char> & textures, std::vector<char> & heights, std::vector<unsigned char> & flatnesses, std::vector<unsigned char> & edgeOffsets);
+    hexGrid(unsigned int sidelength, unsigned int textureUnitWidth, double heightUnit, sf::Texture * tileset, std::vector<unsigned char> & textures, std::vector<char> & heights, std::vector<unsigned char> & flatnesses, std::vector<unsigned char> & edgeOffsets, std::function<sf::Color(unsigned int a, unsigned int b, unsigned char texChar, char height, sf::Vector3f normal)> colourer);
 
     //Setters for individual hexagons
 
