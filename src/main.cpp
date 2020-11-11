@@ -26,6 +26,18 @@ int main() {
         loadResourceException exc;
         throw exc;
     }
+    //Load the sprite from locally saved file
+    sf::Texture spriteTex;
+    if (!spriteTex.loadFromFile("sprite.png")) {
+        loadResourceException exc;
+        throw exc;
+    }
+    //Set up character sprite
+    gridSprite characterSprite(-127,0.1,0.1,spriteTex,sf::IntRect(0,0,64,64));
+    characterSprite.setOrigin(32,64);
+    characterSprite.setScale(1.f/64.f,1.f/64.f);
+    //Set up grass sprites
+    std::vector<gridSprite> grassSprites;
     //Load texture and height map
     std::vector<unsigned char> texMap;
     std::vector<char> heightMap;
@@ -44,10 +56,11 @@ int main() {
     } else {
         throw 1;
     }
-    for (unsigned long i=0; i < texMap.size(); i++) {
-        edgeMap[i] = texMap[i] > 1 ? texMap[i] - 1 : 0;
-    }
     std::vector<unsigned char> flatnessMap(texMap.size(),1);
+    for (unsigned long i=0; i < texMap.size(); i++) {
+        flatnessMap[i] = texMap[i] == 0 ? 255 : 0;
+        edgeMap[i] = texMap[i] > 1 ? 1 : 0;
+    }
     //Create a hexGrid of side length 20, textured with tileset.png with the mapping defined in "earth.dat"
     unsigned int sideLen = 20;
     hexGrid draw(sideLen,320,0.5,&tileset,texMap,heightMap,flatnessMap,edgeMap,shader);
@@ -55,6 +68,17 @@ int main() {
     double scale = 700.d / (2*sideLen+1);
     draw.setPosition(152-scale,0.5*scale);
     draw.setScale(scale,scale);
+    //Add grass sprites to grassy areas
+    grassSprites.emplace_back(-127,6.01,0.01,spriteTex,sf::IntRect(64,64,64,64));
+    grassSprites.emplace_back(-127,2.34,8.55,spriteTex,sf::IntRect(64,64,64,64));
+    grassSprites.emplace_back(-127,19.81,15.3,spriteTex,sf::IntRect(64,64,64,64));
+    for (auto iter = grassSprites.begin(), end = grassSprites.end(); iter != end; iter++) {
+        iter->setOrigin(32,64);
+        iter->setScale(1.f/64.f,1.f/64.f);
+        iter->addToGrid(&draw);
+    }
+    //Add the character sprite
+    characterSprite.addToGrid(&draw);
     unsigned char rot = 0;
     //Keep the window open until closed
     while (window.isOpen()) {
@@ -71,6 +95,22 @@ int main() {
                     draw.setGridRotation(rot);
                 } else if (event.key.code == sf::Keyboard::Escape) {
                     window.close();
+                } else if (event.key.code == sf::Keyboard::W) {
+                    characterSprite.setTextureRect(sf::IntRect(0,64,64,64));
+                    auto currPos = characterSprite.getABCoords();
+                    characterSprite.setAB(currPos.x - 0.1, currPos.y - 0.1,&draw);
+                } else if (event.key.code == sf::Keyboard::A) {
+                    characterSprite.setTextureRect(sf::IntRect(64,0,64,64));
+                    auto currPos = characterSprite.getABCoords();
+                    characterSprite.setAB(currPos.x - 0.2, currPos.y + 0.2,&draw);
+                } else if (event.key.code == sf::Keyboard::S) {
+                    characterSprite.setTextureRect(sf::IntRect(0,0,64,64));
+                    auto currPos = characterSprite.getABCoords();
+                    characterSprite.setAB(currPos.x + 0.1, currPos.y + 0.1,&draw);
+                } else if (event.key.code == sf::Keyboard::D) {
+                    characterSprite.setTextureRect(sf::IntRect(128,0,-64,64));
+                    auto currPos = characterSprite.getABCoords();
+                    characterSprite.setAB(currPos.x + 0.2, currPos.y - 0.2,&draw);
                 }
             }
         }

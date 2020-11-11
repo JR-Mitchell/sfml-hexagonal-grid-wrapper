@@ -2,6 +2,7 @@
 #ifndef HEXGRID_H
 #define HEXGRID_H
 
+#include "gridSprite.h"
 #include "renderRow.h"
 #include <vector>
 #include <fstream>
@@ -13,6 +14,11 @@
  */
 class hexGrid: public sf::Drawable, public sf::Transformable {
 private:
+
+    //Friend methods
+    friend void gridSprite::addToGrid(hexGrid * gridPtr);
+    friend void gridSprite::setMinHeight(char minHeight, hexGrid * gridPtr);
+    friend void gridSprite::setAB(double a, double b, hexGrid * gridPtr);
 
     //Variable members
 
@@ -49,6 +55,9 @@ private:
     // Method used for shading / colouring a tile from its characteristics
     std::function<sf::Color(unsigned int a, unsigned int b, unsigned char texChar, char height, sf::Vector3f normal)> colourer;
 
+    // Vector containing pointers to all gridSprites on the grid
+    std::vector<gridSprite *> sprites;
+
     //Methods
 
     // Overload of sf::Drawable's draw() method
@@ -83,6 +92,7 @@ private:
      * @param bPrime: reference to a variable to set to the rotated b coordinate
      */
     void getOtherCoordinates(unsigned int a, unsigned int b, unsigned long & pointIndex, unsigned int & aPrime, unsigned int & bPrime);
+    void getOtherCoordinates(double a, double b, unsigned long & pointIndex, double & aPrime, double & bPrime);
 
     /**
      * Calculates the 9 height values based on neighbouring tile heights for a given tile
@@ -93,6 +103,20 @@ private:
      * @param bottomHeights: size-9 double array to update with the heights of the lower half
      */
     void getTileHeights(unsigned int a, unsigned int b, unsigned long pointIndex, double * topHeights, double * bottomHeights);
+
+    /**
+     * Places a sprite on the row it belongs on
+     *
+     * @param sprite: the sprite to place
+     */
+    void placeSprite(gridSprite * sprite);
+
+    /**
+     * Moves a sprite, removing it from its old row and replacing it
+     *
+     * @param sprite: the sprite to place
+     */
+    void removeSprite(gridSprite * sprite);
 
 public:
     //Constructors

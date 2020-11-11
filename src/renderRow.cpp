@@ -1,4 +1,5 @@
 #include "renderRow.h"
+#include <algorithm>
 
 #define PI 3.14159265;
 
@@ -33,6 +34,9 @@ void renderRow::draw(sf::RenderTarget & target, sf::RenderStates states) const {
     states.transform *= getTransform();
     target.draw(edges, states);
     target.draw(triangles, states);
+    for (auto i: sprites) {
+        target.draw(*i,states);
+    }
 }
 
 void renderRow::setTexture(unsigned int hexIndex, unsigned int xOffset, unsigned int yOffset, unsigned int textureWidth) {
@@ -96,5 +100,22 @@ void renderRow::setHeights(unsigned int hexIndex, double * heights, std::functio
         for (char j=0; j<3; j++) {
             triangles[3*(3*hexIndex + i) + j].color = faceColour;
         }
+    }
+}
+
+void renderRow::addSprite(gridSprite * sprite) {
+    sprites.push_back(sprite);
+}
+
+void renderRow::removeSprite(gridSprite * sprite) {
+    auto position = std::find(sprites.begin(), sprites.end(), sprite);
+    if (position != sprites.end()) {
+        sprites.erase(position);
+    }
+}
+
+void renderRow::clearSprites() {
+    if (sprites.size() > 0) {
+        sprites.clear();
     }
 }

@@ -2,10 +2,10 @@
 #ifndef RENDERROW_H
 #define RENDERROW_H
 
-#include <SFML/Graphics.hpp>
 #include <math.h>
 #include <vector>
 #include <functional>
+#include "gridSprite.h"
 
 /**
  * renderRow class encapsulates sf::VertexArray (and later, sprites) to
@@ -21,6 +21,7 @@ private:
     sf::VertexArray triangles;
     // Underlying sf::VertexArray storing the 3 extrusion edges for each hexagon in the grid
     sf::VertexArray edges;
+    std::vector<gridSprite *> sprites;
     // Overload of sf::Drawable's draw() method
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 public:
@@ -52,6 +53,25 @@ public:
      * @param colourer: method that takes the vector normal to a surface and returns the colour to shade that surface
      */
     void setHeights(unsigned int hexIndex, double * heights, std::function<sf::Color(sf::Vector3f)> colourer);
+
+    /**
+     * Adds a sprite to the render row
+     *
+     * @param sprite: the sprite to add
+     */
+    void addSprite(gridSprite * sprite);
+
+    /**
+     * Removes a particular sprite from the render row
+     *
+     * @param sprite: the sprite to remove
+     */
+    void removeSprite(gridSprite * sprite);
+
+    /**
+     * Removes all sprites from the render row
+     */
+    void clearSprites();
 };
 
 #endif // !RENDERROW_H

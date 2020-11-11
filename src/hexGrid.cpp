@@ -75,6 +75,9 @@ void hexGrid::init() {
 }
 
 void hexGrid::updateTiles() {
+    for (auto iter=rows.begin(), end = rows.end(); iter != end; iter++) {
+        iter->clearSprites();
+    }
     //Map textures to rows
     unsigned int texModuland = tileset->getSize().x / textureUnitWidth;
     for (unsigned int b = 0; b <= 2*s; b++) {
@@ -97,6 +100,9 @@ void hexGrid::updateTiles() {
             rows[aPrime+bPrime].setHeights((rows[aPrime+bPrime].noHexes + 2*aPrime - 2*bPrime)/2,topHeights,[a,b,texChar,height,this](sf::Vector3f normal){return colourer(a,b,texChar,height,normal);});
             rows[aPrime+bPrime+1].setHeights((rows[aPrime+bPrime+1].noHexes + 2*aPrime - 2*bPrime)/2,bottomHeights,[a,b,texChar,height,this](sf::Vector3f normal){return colourer(a,b,texChar,height,normal);});
         }
+    }
+    for (auto iter = sprites.begin(), end = sprites.end(); iter != end; iter++) {
+        placeSprite(*iter);
     }
 }
 
@@ -195,6 +201,58 @@ void hexGrid::getOtherCoordinates(unsigned int a, unsigned int b, unsigned long 
     }
 }
 
+void hexGrid::getOtherCoordinates(double a, double b, unsigned long & pointIndex, double & aPrime, double & bPrime) {
+    //Calculate the actual hexagon that the points are on
+    unsigned int aInt = static_cast<unsigned int>(floor(a));
+    unsigned int bInt = static_cast<unsigned int>(floor(b));
+    double aOffset = a - floor(a);
+    double bOffset = b - floor(b);
+    if (aOffset > bOffset) {
+        if (2*aOffset + bOffset >= 1) {
+            aInt += 1;
+            if (2*aOffset + bOffset >= 2 && aOffset + 2*bOffset >= 2) {
+                bInt += 1;
+            }
+        }
+    } else {
+        if (aOffset + 2*bOffset >= 1) {
+            bInt += 1;
+            if (2*aOffset + bOffset >= 2 && aOffset + 2*bOffset >= 2) {
+                aInt += 1;
+            }
+        }
+    }
+    pointIndex = bInt > s
+        ? aInt + bInt*(6*s + 1 - bInt)/2 - s*s
+        : aInt + bInt*(2*s + 1 + bInt)/2;
+    switch(gridRotation) {
+        case 1:
+            aPrime = s + a - b;
+            bPrime = a;
+            break;
+        case 2:
+            aPrime = 2*s - b;
+            bPrime = s + a - b;
+            break;
+        case 3:
+            aPrime = 2*s - a;
+            bPrime = 2*s - b;
+            break;
+        case 4:
+            aPrime = s - a + b;
+            bPrime = 2*s - a;
+            break;
+        case 5:
+            aPrime = b;
+            bPrime = s + b - a;
+            break;
+        default:
+            aPrime = a;
+            bPrime = b;
+            break;
+    }
+}
+
 void hexGrid::getTileHeights(unsigned int a, unsigned int b, unsigned long pointIndex, double * topHeights, double * bottomHeights) {
     const char height = heights[pointIndex];
     const unsigned int flatness = static_cast<unsigned int>(flatnesses[pointIndex]) + 1;
@@ -264,6 +322,36 @@ void hexGrid::getTileHeights(unsigned int a, unsigned int b, unsigned long point
         ? (height - edgeOffset)*heightUnit
         : vertexHeights[((6-gridRotation)%6+4)%6]*heightUnit;
     bottomHeights[6] = vertexHeights[((6-gridRotation)%6+4)%6]*heightUnit;
+}
+
+void hexGrid::placeSprite(gridSprite * sprite) {
+    sf::Vector2<double> abCoords = sprite->getABCoords();
+    unsigned long pointIndex;
+    double aPrime, bPrime;
+    getOtherCoordinates(abCoords.x,abCoords.y,pointIndex,aPrime,bPrime);
+    if (aPrime >= 0 && aPrime <= 2*s && aPrime <= s + bPrime && bPrime >= 0 && bPrime <= 2*s && bPrime <= s + aPrime) {
+        double y = aPrime + bPrime;
+        double x = aPrime - bPrime;
+        if (y > 0 && y < 4*s + 2) {
+            unsigned int rowIndex = static_cast<unsigned int>(y);
+            //Do height calculations
+            char height = sprite->getMinHeight();
+            height = height < heights[pointIndex] ? heights[pointIndex] : height;
+            sprite->setPosition(x-rows[rowIndex].getPosition().x+s,sqrt(1.0/3.0)*(y-floor(y))-height*heightUnit);
+            rows[rowIndex].addSprite(sprite);
+        }
+    }
+}
+
+void hexGrid::removeSprite(gridSprite * sprite) {
+    sf::Vector2<double> abCoords = sprite->getABCoords();
+    unsigned long pointIndex;
+    double aPrime, bPrime;
+    getOtherCoordinates(abCoords.x,abCoords.y,pointIndex,aPrime,bPrime);
+    unsigned int rowIndex = static_cast<unsigned int>(aPrime + bPrime);
+    if (rowIndex < 4*s + 2) {
+        rows[rowIndex].removeSprite(sprite);
+    }
 }
 
 //Public methods
