@@ -81,6 +81,8 @@ int main() {
     characterSprite.addToGrid(&draw);
     unsigned char rot = 0;
     //Keep the window open until closed
+    double aUpDirections [] = {-1,-1,0,1,1,0};
+    double aLeftDirections [] = {-1,1,2,1,-1,-2};
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -98,19 +100,19 @@ int main() {
                 } else if (event.key.code == sf::Keyboard::W) {
                     characterSprite.setTextureRect(sf::IntRect(0,64,64,64));
                     auto currPos = characterSprite.getABCoords();
-                    characterSprite.setAB(currPos.x - 0.1, currPos.y - 0.1,&draw);
+                    characterSprite.setAB(currPos.x + 0.1*aUpDirections[rot], currPos.y + 0.1*aUpDirections[(rot+1)%6],&draw);
                 } else if (event.key.code == sf::Keyboard::A) {
                     characterSprite.setTextureRect(sf::IntRect(64,0,64,64));
                     auto currPos = characterSprite.getABCoords();
-                    characterSprite.setAB(currPos.x - 0.2, currPos.y + 0.2,&draw);
+                    characterSprite.setAB(currPos.x + 0.1*aLeftDirections[rot], currPos.y + 0.1*aLeftDirections[(rot+1)%6],&draw);
                 } else if (event.key.code == sf::Keyboard::S) {
                     characterSprite.setTextureRect(sf::IntRect(0,0,64,64));
                     auto currPos = characterSprite.getABCoords();
-                    characterSprite.setAB(currPos.x + 0.1, currPos.y + 0.1,&draw);
+                    characterSprite.setAB(currPos.x + 0.1*aUpDirections[(rot+3)%6], currPos.y + 0.1*aUpDirections[(rot+4)%6],&draw);
                 } else if (event.key.code == sf::Keyboard::D) {
                     characterSprite.setTextureRect(sf::IntRect(128,0,-64,64));
                     auto currPos = characterSprite.getABCoords();
-                    characterSprite.setAB(currPos.x + 0.2, currPos.y - 0.2,&draw);
+                    characterSprite.setAB(currPos.x + 0.1*aLeftDirections[(rot+3)%6], currPos.y + 0.1*aLeftDirections[(rot+4)%6],&draw);
                 }
             }
         }
