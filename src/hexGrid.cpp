@@ -201,30 +201,69 @@ void hexGrid::getOtherCoordinates(unsigned int a, unsigned int b, unsigned long 
     }
 }
 
-void hexGrid::getOtherCoordinates(double a, double b, unsigned long & pointIndex, double & aPrime, double & bPrime) {
+void hexGrid::getDetailedCoordinatesAndHeights(double a, double b, unsigned long & pointIndex, double & aPrime, double & bPrime, double & height) {
     //Calculate the actual hexagon that the points are on
     unsigned int aInt = static_cast<unsigned int>(floor(a));
     unsigned int bInt = static_cast<unsigned int>(floor(b));
     double aOffset = a - floor(a);
     double bOffset = b - floor(b);
-    if (aOffset > bOffset) {
-        if (2*aOffset + bOffset >= 1) {
-            aInt += 1;
-            if (2*aOffset + bOffset >= 2 && aOffset + 2*bOffset >= 2) {
-                bInt += 1;
-            }
+    unsigned char tri = 0;
+    if (aOffset + bOffset < 1) {
+        if (2*bOffset - aOffset > 1) {
+            bInt++;
+            tri = 1;
+        } else if (2*aOffset - bOffset > 1) {
+            aInt++;
+            tri = 5;
+        } else if (2*bOffset - aOffset < 0) {
+            tri = 2;
+        } else if (2*aOffset - bOffset < 0) {
+            tri = 4;
+        } else {
+            tri = 3;
         }
     } else {
-        if (aOffset + 2*bOffset >= 1) {
-            bInt += 1;
-            if (2*aOffset + bOffset >= 2 && aOffset + 2*bOffset >= 2) {
-                aInt += 1;
-            }
+        if (2*aOffset - bOffset < 0) {
+            bInt++;
+            tri = 2;
+        } else if (2*bOffset - aOffset < 0) {
+            aInt++;
+            tri = 4;
+        } else if (2*aOffset - bOffset > 1) {
+            bInt++;
+            aInt++;
+            tri = 1;
+        } else if (2*bOffset - aOffset > 1) {
+            bInt++;
+            aInt++;
+            tri = 5;
+        } else {
+            bInt++;
+            aInt++;
+            tri = 0;
         }
     }
     pointIndex = bInt > s
         ? aInt + bInt*(6*s + 1 - bInt)/2 - s*s
         : aInt + bInt*(2*s + 1 + bInt)/2;
+    if (aInt >= 0 && aInt <= 2*s && aInt <= s + bInt && bInt >= 0 && bInt <= 2*s && bInt <= s + aInt) {
+        aOffset = a - aInt;
+        bOffset = b - bInt;
+        //Do more complex height calculations in here
+        double allPointHeights [18];
+        getTileHeights(aInt,bInt,pointIndex,allPointHeights,&allPointHeights[9]);
+        double edgeHeights [6] = {allPointHeights[3],allPointHeights[5],allPointHeights[7],allPointHeights[14],allPointHeights[12],allPointHeights[10]};
+        height = allPointHeights[0];
+        const double multipliers[6] = {-2, -1, 1, 2, 1, -1};
+        const double j = multipliers[tri]*aOffset + multipliers[(tri+4)%6]*bOffset;
+        const double k = multipliers[(tri+2)%6]*aOffset + multipliers[tri]*bOffset;
+        const double jUnitOffset = edgeHeights[(tri+gridRotation)%6] - allPointHeights[0];
+        height += jUnitOffset*j;
+        const double kUnitOffset = edgeHeights[(tri+1+gridRotation)%6] - allPointHeights[0];
+        height += kUnitOffset*k;
+    } else {
+        height = 0;
+    }
     switch(gridRotation) {
         case 1:
             aPrime = s + a - b;
@@ -327,17 +366,17 @@ void hexGrid::getTileHeights(unsigned int a, unsigned int b, unsigned long point
 void hexGrid::placeSprite(gridSprite * sprite) {
     sf::Vector2<double> abCoords = sprite->getABCoords();
     unsigned long pointIndex;
-    double aPrime, bPrime;
-    getOtherCoordinates(abCoords.x,abCoords.y,pointIndex,aPrime,bPrime);
+    double aPrime, bPrime, height;
+    getDetailedCoordinatesAndHeights(abCoords.x,abCoords.y,pointIndex,aPrime,bPrime,height);
     if (aPrime >= 0 && aPrime <= 2*s && aPrime <= s + bPrime && bPrime >= 0 && bPrime <= 2*s && bPrime <= s + aPrime) {
         double y = aPrime + bPrime;
         double x = aPrime - bPrime;
         if (y > 0 && y < 4*s + 2) {
-            unsigned int rowIndex = static_cast<unsigned int>(y);
+            unsigned int rowIndex = static_cast<unsigned int>(y) + 1;
             //Do height calculations
-            char height = sprite->getMinHeight();
-            height = height < heights[pointIndex] ? heights[pointIndex] : height;
-            sprite->setPosition(x-rows[rowIndex].getPosition().x+s,sqrt(1.0/3.0)*(y-floor(y))-height*heightUnit);
+            double minHeight = sprite->getMinHeight()*heightUnit;
+            height = height < minHeight ? minHeight : height;
+            sprite->setPosition(x-rows[rowIndex].getPosition().x+s,sqrt(1.0/3.0)*(y-floor(y))-height);
             rows[rowIndex].addSprite(sprite);
         }
     }
@@ -346,9 +385,9 @@ void hexGrid::placeSprite(gridSprite * sprite) {
 void hexGrid::removeSprite(gridSprite * sprite) {
     sf::Vector2<double> abCoords = sprite->getABCoords();
     unsigned long pointIndex;
-    double aPrime, bPrime;
-    getOtherCoordinates(abCoords.x,abCoords.y,pointIndex,aPrime,bPrime);
-    unsigned int rowIndex = static_cast<unsigned int>(aPrime + bPrime);
+    double aPrime, bPrime, height;
+    getDetailedCoordinatesAndHeights(abCoords.x,abCoords.y,pointIndex,aPrime,bPrime,height);
+    unsigned int rowIndex = static_cast<unsigned int>(aPrime + bPrime) + 1;
     if (rowIndex < 4*s + 2) {
         rows[rowIndex].removeSprite(sprite);
     }

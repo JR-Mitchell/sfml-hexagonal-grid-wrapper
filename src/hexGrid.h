@@ -92,7 +92,18 @@ private:
      * @param bPrime: reference to a variable to set to the rotated b coordinate
      */
     void getOtherCoordinates(unsigned int a, unsigned int b, unsigned long & pointIndex, unsigned int & aPrime, unsigned int & bPrime);
-    void getOtherCoordinates(double a, double b, unsigned long & pointIndex, double & aPrime, double & bPrime);
+
+    /**
+     * Calculates the point index, rotated coordinates and exact terrain height for given double a and b
+     *
+     * @param a: the 'a' coordinate; i.e the number of down-and-right moves from the top hexagon
+     * @param b: the 'b' coordinate; i.e the number of down-and-left moves from the top hexagon
+     * @param pointIndex: reference to a variable to set to the index of the hexagon containing the given point
+     * @param aPrime: reference to a variable to set to the rotated a coordinate
+     * @param bPrime: reference to a variable to set to the rotated b coordinate
+     * @param height: reference to a variable to set to the terrain height
+     */
+    void getDetailedCoordinatesAndHeights(double a, double b, unsigned long & pointIndex, double & aPrime, double & bPrime, double & height);
 
     /**
      * Calculates the 9 height values based on neighbouring tile heights for a given tile
