@@ -1,0 +1,49 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Cmake",
+            "type": "shell",
+            "command": "cmake -G \"Unix Makefiles\" ..",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            }
+        },
+        {
+            "label": "Make",
+            "type": "shell",
+            "command": "make",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            }
+        },
+        {
+            "label": "Run",
+            "type": "shell",
+            "command": "./HexGrid",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            }
+        },
+        {
+            "label": "Recompile and run",
+            "dependsOn": [
+                "Cmake",
+                "Make",
+                "Run"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "Recompile without running",
+            "dependsOn": [
+                "Cmake",
+                "Make"
+            ],
+            "dependsOrder": "sequence"
+        }
+    ]
+}
