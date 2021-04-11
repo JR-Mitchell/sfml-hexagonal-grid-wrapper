@@ -42,6 +42,11 @@ hexGrid::hexGrid(unsigned int s, unsigned int textureUnitWidth, double heightUni
         initialiseGridFlatnessMapException exc;
         throw exc;
     }
+    //Ensure that `edgeOffsets` has the correct number of elements
+    if (edgeOffsets.size() != 3*(s*(s+1)) + 1) {
+        initialiseGridOffsetMapException exc;
+        throw exc;
+    }
     init();
 }
 

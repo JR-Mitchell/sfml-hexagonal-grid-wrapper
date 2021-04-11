@@ -4,6 +4,22 @@
 
 #include <SFML/Graphics.hpp>
 
+struct gridSpriteData {
+    //The minimum height to render the sprite at - for, e.g, flying sprites
+    char minHeight;
+    //The a coordinate of the sprite
+    double a;
+    //The b coordinate of the sprite
+    double b;
+    //The name key of the sprite
+    unsigned char textureSheetKey;
+    //The int rect of the sprite
+    sf::IntRect * rectangle;
+
+    gridSpriteData(char minHeight, double a, double b, unsigned char textureSheetKey, sf::IntRect * rectangle)
+        : minHeight(minHeight), a(a), b(b), textureSheetKey(textureSheetKey), rectangle(rectangle) {}
+};
+
 /**
  * gridSprite class provides sf::Sprite with the information necessary to
  * draw onto the grid

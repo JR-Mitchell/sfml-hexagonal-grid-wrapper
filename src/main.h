@@ -2,6 +2,6 @@
 #define MAIN_H
 
 #include <iostream>
-#include "hexGrid.h"
+#include "gridWrapper.h"
 
 #endif // !MAIN_H
